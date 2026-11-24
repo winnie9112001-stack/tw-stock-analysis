@@ -410,123 +410,6 @@
     </section>
 
 
-    <!-- 1.5 【四大深度維度：原物料滯後傳導剪刀差、次族群分流指標、匯率敏感度與自由現金流】 -->
-    <section class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3 mb-4">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-0.5 rounded-full font-bold">機構級投研模組</span>
-            <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
-              <span id="dimension-stock-name">統一 (1216)</span> 原物料滯後剪刀差 · 次族群指標 · 匯率避險全透視
-            </h3>
-          </div>
-          <p class="text-xs text-slate-500 mt-1">
-            穿透 1～2 季原物料採購滯後期、美元匯率敏感度及專屬次族群營運密碼，告別傳統單一指標誤判
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-lg font-medium border border-slate-200">
-            次族群：<span id="subgroup-badge" class="font-bold text-indigo-600">食品龍頭與全通路</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- 四大維度卡片網格 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        <!-- 卡片 A: 原物料剪刀差傳導週期 -->
-        <div class="bg-slate-50/80 rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <i data-lucide="git-pull-request" class="w-4 h-4 text-emerald-600"></i>
-                原料滯後傳導與剪刀差
-              </span>
-              <span id="scissors-status-badge" class="text-[10px] font-bold px-2 py-0.5 rounded border text-emerald-600 bg-emerald-50 border-emerald-200">
-                低價紅利期
-              </span>
-            </div>
-            <p id="scissors-desc" class="text-xs text-slate-600 leading-relaxed">
-              CBOT 穀物報價回跌至終端財報認列，約存在 90~120 天庫存滯後期。目前處於低價原料到港階段，終端價格維持高檔，享有超額毛利擴張。
-            </p>
-          </div>
-          <div class="mt-3 pt-2.5 border-t border-slate-200/60 text-[11px] text-slate-500 flex justify-between">
-            <span>存貨消化週轉：<strong id="scissors-inventory-days" class="text-slate-800">42 天</strong></span>
-            <span class="text-emerald-600 font-semibold">剪刀差紅利爆發中</span>
-          </div>
-        </div>
-
-        <!-- 卡片 B: USD/TWD 匯率敏感度與避險水庫 -->
-        <div class="bg-slate-50/80 rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <i data-lucide="dollar-sign" class="w-4 h-4 text-blue-600"></i>
-                USD/TWD 匯率敏感度
-              </span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded border text-blue-600 bg-blue-50 border-blue-200">
-                雙向自然避險
-              </span>
-            </div>
-            <p id="fx-desc" class="text-xs text-slate-600 leading-relaxed">
-              台幣每貶值 1 元，進口大豆/小麥到港成本估增約 2.8%~3.3%。惟公司具備海外實體營收對沖，並搭配遠期外匯 (DF) 鎖定基差，波動完全可控。
-            </p>
-          </div>
-          <div class="mt-3 pt-2.5 border-t border-slate-200/60 text-[11px] text-slate-500 flex justify-between">
-            <span>避險策略：遠匯 + 海外外幣</span>
-            <span class="text-blue-600 font-semibold">抗匯率震盪力：極高</span>
-          </div>
-        </div>
-
-        <!-- 卡片 C: 次族群專屬關鍵營運指標 -->
-        <div class="bg-slate-50/80 rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <i data-lucide="gauge" class="w-4 h-4 text-purple-600"></i>
-                次族群分流專屬密碼
-              </span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded border text-purple-600 bg-purple-50 border-purple-200">
-                專案追蹤
-              </span>
-            </div>
-            <div id="subgroup-metric-content" class="text-xs text-slate-600 space-y-1.5 leading-relaxed">
-              <div><strong class="text-slate-800">同店銷售 (SSSG)：</strong>+4.8% 穩健擴張</div>
-              <div><strong class="text-slate-800">超商鮮食/現煮佔比：</strong>衝破 35% 門檻</div>
-              <div><strong class="text-slate-800">定價向下黏性：</strong>品牌護城河極深</div>
-            </div>
-          </div>
-          <div class="mt-3 pt-2.5 border-t border-slate-200/60 text-[11px] text-slate-500 flex justify-between">
-            <span>行業定位：龍頭霸主</span>
-            <span class="text-purple-600 font-semibold">商業模式評分：98 分</span>
-          </div>
-        </div>
-
-        <!-- 卡片 D: 營運現金流 (OCF) 與自由現金流 (FCF) -->
-        <div class="bg-slate-50/80 rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <i data-lucide="activity" class="w-4 h-4 text-amber-600"></i>
-                現金流與 CapEx 擴張壓力
-              </span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded border text-amber-600 bg-amber-50 border-amber-200">
-                配息永續無虞
-              </span>
-            </div>
-            <p id="fcf-desc" class="text-xs text-slate-600 leading-relaxed">
-              營運現金流充沛 (OCF / 稅後淨利比長年保持 115% 以上)，賺取的全是扎實真現金。新冷鏈物流園區投資已過資本支出高峰期，自由現金流非常強健。
-            </p>
-          </div>
-          <div class="mt-3 pt-2.5 border-t border-slate-200/60 text-[11px] text-slate-500 flex justify-between">
-            <span>資本支出壓力：輕度平緩</span>
-            <span class="text-amber-600 font-semibold">配息永續率：> 80%</span>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
     <!-- 2. 焦點個股透視看板（含五環上下游與運輸分析） -->
     <section class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-950 rounded-2xl p-5 sm:p-6 text-white shadow-lg border border-slate-800">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
@@ -6240,10 +6123,16 @@
         defense: item.tag
       }));
       renderFinancialTable(ALL_FINANCIAL_LIST);
-      renderFourDimensions("1216");
+      updateDimensions("1216");
       loadLiveQuotesFromAction();
 
       renderNews(NEWS_DATA);
+      setTimeout(() => {
+        if (chartInstance) {
+          chartInstance.resize();
+          chartInstance.update();
+        }
+      }, 50);
     }
 
     
@@ -6387,6 +6276,7 @@
     }
 
     function changeCompany(code) {
+      updateDimensions(code);
       renderFourDimensions(code);
       currentStockCode = code;
       renderCompanyProfile(code);
@@ -6398,6 +6288,12 @@
       const sel2 = document.getElementById('stock-chart-select');
       if (sel1) sel1.value = code;
       if (sel2) sel2.value = code;
+      setTimeout(() => {
+        if (chartInstance) {
+          chartInstance.resize();
+          chartInstance.update();
+        }
+      }, 30);
     }
 
     // 渲染專屬三大護城河指標 (食安、氣候、定價權)
@@ -6721,6 +6617,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: false,
           interaction: {
             mode: 'index',
             intersect: false
@@ -6982,7 +6879,13 @@
       }
     }
 
-    window.addEventListener('DOMContentLoaded', initPage);
+    // 雙重保險保證在網頁加載時即刻繪製，絕不等待手動觸發
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(initPage, 20);
+    } else {
+      window.addEventListener('DOMContentLoaded', initPage);
+      window.addEventListener('load', initPage);
+    }
   </script>
 </body>
 </html>
