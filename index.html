@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台股產業價值鏈分析平台 - 食品產業鏈深度旗艦版</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js CDN for Stock Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              900: '#14532d'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .range-btn-active {
+      background-color: #2563eb !important;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+    .yahoo-watermark {
+      position: absolute;
+      top: 12px;
+      left: 16px;
+      font-size: 22px;
+      font-weight: 800;
+      color: rgba(148, 163, 184, 0.22);
+      pointer-events: none;
+      user-select: none;
+      letter-spacing: -0.5px;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- 頂部導航列 -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+          <i data-lucide="trending-up" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            台股產業價值鏈分析
+            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">全連動旗艦版</span>
+          </h1>
+          <p class="text-[11px] text-slate-500 hidden sm:block">個股投資診斷 · 外國進口來源 · 食安氣候獲利三要素全連動 · Yahoo走勢</p>
+        </div>
+      </div>
+
+      <!-- 即時股票搜尋框 -->
+      <div class="flex-1 max-w-md relative">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="global-search-input" 
+            placeholder="搜尋代號或公司 (如: 1216、統一、卜蜂、大成...)" 
+            oninput="handleSearch(this.value)"
+            class="w-full bg-slate-100 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl pl-9 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-inner"
+          />
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+          <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+        </div>
+        <div id="search-dropdown" class="hidden absolute left-0 right-0 top-11 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-72 overflow-y-auto custom-scrollbar"></div>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <select id="industry-select" onchange="switchIndustry(this.value)" class="text-xs sm:text-sm bg-slate-100 border border-slate-300 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+          <option value="food" selected>🥣 食品產業</option>
+          <option value="semi" disabled>💻 半導體 (即將擴充)</option>
+          <option value="ai" disabled>🤖 AI 伺服器 (即將擴充)</option>
+        </select>
+        <a href="https://tw.stock.yahoo.com/" target="_blank" rel="noopener noreferrer" class="hidden lg:flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors font-medium">
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          Yahoo股市官網
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主內容區 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col gap-6">
+
+    <!-- 0. 【Yahoo 股市同款走勢圖 + 未來預測分析】 -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      
+      <!-- 頂部股票資訊條 -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between pb-4 border-b border-slate-100 gap-4 mb-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-bold">Yahoo 奇摩股市同款架構</span>
+            <span class="text-xs text-slate-400">藍色即時日線走勢 · 灰色平盤基準線 · 紅色成交量直方圖</span>
+          </div>
+          <div class="flex flex-wrap items-baseline gap-3">
+            <h2 id="chart-stock-name" class="text-2xl font-bold text-slate-900">統一 (1216.TW)</h2>
+            <span id="chart-stock-price" class="text-2xl font-extrabold text-blue-600">80.50</span>
+            <span id="chart-stock-change" class="text-sm font-bold text-red-600 flex items-center gap-0.5">
+              ▲ +0.80 (+1.00%)
+            </span>
+            <span id="chart-stock-tag" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">食品龍頭 · 全產業整合</span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-xs text-slate-500 font-medium">切換股票：</label>
+          <select id="stock-chart-select" onchange="changeCompany(this.value)" class="text-xs sm:text-sm bg-slate-100 border border-slate-300 text-slate-800 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold">
+            <option value="1216" selected>1216 統一</option>
+            <option value="1210">1210 大成</option>
+            <option value="1215">1215 卜蜂</option>
+            <option value="1232">1232 大統益</option>
+            <option value="2912">2912 統一超</option>
+            <option value="1229">1229 聯華</option>
+          </select>
+          <a id="yahoo-chart-btn" href="https://tw.stock.yahoo.com/quote/1216.TW" target="_blank" rel="noopener noreferrer" 
+             class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200">
+            Yahoo 原廠圖
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- 區間切換工具列 -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-1.5 bg-slate-200/60 p-1 rounded-lg">
+          <button onclick="setRangePreset('1M')" id="btn-range-1M" class="range-btn px-2.5 py-1 rounded-md text-slate-700 font-medium hover:bg-white transition-colors">1 個月</button>
+          <button onclick="setRangePreset('3M')" id="btn-range-3M" class="range-btn px-2.5 py-1 rounded-md text-slate-700 font-medium hover:bg-white transition-colors">3 個月</button>
+          <button onclick="setRangePreset('6M')" id="btn-range-6M" class="range-btn range-btn-active px-2.5 py-1 rounded-md text-slate-700 font-medium hover:bg-white transition-colors">6 個月 (原版)</button>
+          <button onclick="setRangePreset('1Y')" id="btn-range-1Y" class="range-btn px-2.5 py-1 rounded-md text-slate-700 font-medium hover:bg-white transition-colors">1 年</button>
+          <button onclick="setRangePreset('PREDICT')" id="btn-range-PREDICT" class="range-btn px-2.5 py-1 rounded-md text-slate-700 font-medium hover:bg-white transition-colors flex items-center gap-1">
+            <i data-lucide="sparkles" class="w-3 h-3 text-amber-500"></i>
+            未來預測通道 (AI預測)
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-slate-500 font-medium flex items-center gap-1">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i> 自訂區間：
+          </span>
+          <div class="flex items-center gap-1">
+            <input type="date" id="custom-start-date" value="2026-05-26" class="bg-white border border-slate-300 rounded-md px-2 py-1 text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            <span class="text-slate-400">至</span>
+            <input type="date" id="custom-end-date" value="2026-11-24" class="bg-white border border-slate-300 rounded-md px-2 py-1 text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+          <button onclick="applyCustomDateRange()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1 rounded-md transition-colors shadow-2xs">
+            套用
+          </button>
+        </div>
+      </div>
+
+      <!-- 走勢圖與右側預測分析看板 -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 左側：Yahoo 同款走勢圖 -->
+        <div class="lg:col-span-2 bg-white p-4 rounded-xl border border-slate-200 flex flex-col justify-between relative shadow-inner">
+          <div class="yahoo-watermark">yahoo! 股市</div>
+
+          <div class="flex items-center justify-between mb-1 text-xs relative z-10 pl-24">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="flex items-center gap-1 text-blue-600 font-bold">
+                <span class="w-3.5 h-0.5 bg-blue-600 inline-block"></span> 股價走勢
+              </span>
+              <span class="flex items-center gap-1 text-slate-400 font-medium">
+                <span class="w-3.5 h-0.5 bg-slate-300 inline-block"></span> 基準平盤線
+              </span>
+              <span class="flex items-center gap-1 text-red-500 font-medium">
+                <span class="w-2.5 h-2.5 bg-red-500 inline-block rounded-xs"></span> 成交量 (張)
+              </span>
+              <span id="predict-indicator-badge" class="hidden items-center gap-1 text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 text-[11px]">
+                <span class="w-2.5 h-2.5 bg-indigo-500/30 border border-indigo-500 inline-block rounded-xs"></span> 2027 預估通道
+              </span>
+            </div>
+            <span class="text-slate-400 text-[11px]" id="current-range-display">顯示區間：2026/05/26 ~ 2026/11/24 (6個月)</span>
+          </div>
+
+          <div class="relative h-80 w-full z-10">
+            <canvas id="stockTrendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 右側：AI / 基本面「未來 1~2 年預測與投資分析結論」 -->
+        <div class="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-5 rounded-xl flex flex-col justify-between shadow-md">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+              <span class="text-xs font-bold text-blue-300 flex items-center gap-1.5">
+                <i data-lucide="compass" class="w-4 h-4"></i> 未來 1~2 年目標預測
+              </span>
+              <span id="forecast-rating" class="text-xs bg-blue-500/20 text-blue-300 border border-blue-400/40 px-2 py-0.5 rounded font-bold">偏多看好</span>
+            </div>
+
+            <div class="mt-4 space-y-3">
+              <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700">
+                <div class="text-[11px] text-slate-400 mb-0.5">預估目標價區間 (2027預估)</div>
+                <div class="text-lg font-extrabold text-blue-400" id="forecast-target-range">78.0 ~ 92.0 元</div>
+                <div class="text-[11px] text-slate-300 mt-1" id="forecast-yield-note">預估潛在總報酬率：約 12% ~ 18% (含現金殖利率)</div>
+              </div>
+
+              <div>
+                <h4 class="text-xs font-bold text-slate-200 mb-1 flex items-center gap-1">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5 text-blue-400"></i> 未來核心看漲驅動力
+                </h4>
+                <p class="text-xs text-slate-300 leading-relaxed" id="forecast-driver">
+                  原物料成本回落疊加超商高毛利鮮食爆發，海外菲律賓 7-11 展店強勁，現金流與獲利進入收割期。
+                </p>
+              </div>
+
+              <div>
+                <h4 class="text-xs font-bold text-slate-200 mb-1 flex items-center gap-1">
+                  <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-400"></i> 潛在下檔風險留意
+                </h4>
+                <p class="text-xs text-slate-300 leading-relaxed" id="forecast-risk">
+                  極端氣候若引發大宗穀物重啟急漲、紅海地緣海運費飆升，可能推遲毛利率復甦時點。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
+            <span>分析依據：本益比河流圖與營收年增</span>
+            <span>非保證獲利，僅供決策參考</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 1. 【個股專屬投資診斷 + 國外進口來源國 + 當天國際情勢影響分析】 -->
+    <section class="bg-amber-50/70 border border-amber-300/80 rounded-2xl p-5 shadow-xs">
+      <div class="flex items-start gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+          <i data-lucide="target" class="w-5 h-5"></i>
+        </div>
+        <div class="space-y-3 w-full">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-2">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                <span id="eval-company-name" class="text-amber-900 font-extrabold">統一 (1216)</span>
+                <span>專屬投資預測分析 · 進口來源地 · 當天國外情勢影響診斷</span>
+              </h3>
+              <p class="text-xs text-slate-600 mt-0.5">系統依據當前估值、外國進口供應鏈及國際期貨即時動態自動生成建議</p>
+            </div>
+            <div id="eval-verdict-badge" class="self-start sm:self-auto px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-2xs">
+              適合長期存股分批佈局
+            </div>
+          </div>
+
+          <!-- 三大深度卡片：投資適宜度 + 外國進口產地 + 當天國際影響 -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+            
+            <!-- 卡片 1: 該個股適不適合投資？ -->
+            <div class="bg-white p-3.5 rounded-xl border border-amber-200 shadow-2xs flex flex-col justify-between">
+              <div>
+                <div class="font-bold text-xs text-slate-900 mb-1.5 flex items-center justify-between">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 1. 該檔個股「適不適合投資」？
+                  </span>
+                  <span id="eval-suitability-tag" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">適合投資</span>
+                </div>
+                <p id="eval-suitability-text" class="text-xs text-slate-600 leading-relaxed">
+                  <!-- JS 動態注入 -->
+                </p>
+              </div>
+              <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                <span id="eval-strategy-text">建議策略：逢回拉回分批存股</span>
+                <span id="eval-star-rating" class="font-semibold text-emerald-600">防禦星級：★★★★★</span>
+              </div>
+            </div>
+
+            <!-- 卡片 2: 原物料從哪國進口？ -->
+            <div class="bg-white p-3.5 rounded-xl border border-amber-200 shadow-2xs flex flex-col justify-between">
+              <div>
+                <div class="font-bold text-xs text-slate-900 mb-1.5 flex items-center justify-between">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> 2. 外國進口來源國家與採購比例
+                  </span>
+                  <span class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">95%以上仰賴海運</span>
+                </div>
+                <div id="eval-import-origins" class="space-y-1.5 text-xs text-slate-600 leading-relaxed">
+                  <!-- JS 動態填入進口國 -->
+                </div>
+              </div>
+              <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                <span id="eval-port-text">到港港口：台中港、高雄港</span>
+                <span id="eval-shiptype-text" class="font-semibold text-blue-600">運送形式：散裝 Panamax 船</span>
+              </div>
+            </div>
+
+            <!-- 卡片 3: 當天國外情勢對該股是否有影響？ -->
+            <div class="bg-white p-3.5 rounded-xl border border-amber-200 shadow-2xs flex flex-col justify-between">
+              <div>
+                <div class="font-bold text-xs text-slate-900 mb-1.5 flex items-center justify-between">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> 3. 當天國外即時事件對股價影響
+                  </span>
+                  <span id="eval-foreign-impact-level" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">正面偏多</span>
+                </div>
+                <p id="eval-foreign-impact-text" class="text-xs text-slate-600 leading-relaxed">
+                  <!-- JS 動態填入當天國外影響 -->
+                </p>
+              </div>
+              <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                <span>國際指標：CBOT 穀物、BDI 運價</span>
+                <span class="font-semibold text-slate-700">影響時效：即時 ~ 1季度</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 焦點個股透視看板（含五環上下游與運輸分析） -->
+    <section class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-950 rounded-2xl p-5 sm:p-6 text-white shadow-lg border border-slate-800">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 rounded">個股生態透視核心</span>
+            <span class="text-xs text-slate-400">穿透上下游供應鏈、關鍵物流瓶頸與營運風險</span>
+          </div>
+          <div class="flex flex-wrap items-baseline gap-3">
+            <h2 id="spotlight-title" class="text-xl sm:text-2xl font-bold text-blue-400">統一企業 (1216.TW)</h2>
+            <span id="spotlight-category" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md border border-slate-700">食品龍頭 · 全產業整合</span>
+          </div>
+          <p id="spotlight-summary" class="text-xs text-slate-300 mt-2 max-w-3xl leading-relaxed">
+            身為台灣食品霸主，統一橫跨中游加工到下游品牌，其上游採購鏈牽動國際散裝船運，內部冷鏈物流（統一速達黑貓、捷盛運輸）則成為串連下游 7-11 與零售的關鍵命脈。
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80 shrink-0">
+          <label class="text-xs text-slate-300 font-medium">切換焦點股：</label>
+          <select id="company-select" onchange="changeCompany(this.value)" class="text-xs sm:text-sm bg-slate-900 text-blue-300 border border-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 font-semibold">
+            <option value="1216" selected>1216 統一 (食品/超商全整合)</option>
+            <option value="1210">1210 大成 (農畜/飼料/鮮肉龍頭)</option>
+            <option value="1215">1215 卜蜂 (電宰禽肉/超商鮮食)</option>
+            <option value="1232">1232 大統益 (沙拉油/黃豆粉壓榨)</option>
+            <option value="2912">2912 統一超 (全台7000+超商通路)</option>
+            <option value="1229">1229 聯華 (麵粉大廠/電子化學控股)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 五環流程圖 -->
+      <div class="mt-6">
+        <div class="flex items-center justify-between mb-3 text-xs text-slate-400">
+          <span class="flex items-center gap-1 font-semibold text-slate-300">
+            <i data-lucide="workflow" class="w-4 h-4 text-blue-400"></i>
+            端到端價值傳導路徑 (End-to-End Value Flow)
+          </span>
+          <span class="hidden sm:inline">海運進口 ➔ 核心製造 ➔ 低溫冷鏈 ➔ 零售出海口</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3.5">
+          <div class="bg-amber-950/20 border border-amber-800/40 rounded-xl p-3.5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-amber-300 font-bold text-xs pb-2 border-b border-amber-800/30">
+                <span class="flex items-center gap-1"><i data-lucide="wheat" class="w-3.5 h-3.5"></i> 1. 上游原料供應</span>
+                <span class="bg-amber-900/60 text-amber-200 text-[10px] px-1.5 py-0.2 rounded">原物料</span>
+              </div>
+              <div id="comp-upstream-content" class="text-xs space-y-2 mt-2.5"></div>
+            </div>
+          </div>
+
+          <div class="bg-sky-950/20 border border-sky-800/40 rounded-xl p-3.5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-sky-300 font-bold text-xs pb-2 border-b border-sky-800/30">
+                <span class="flex items-center gap-1"><i data-lucide="ship" class="w-3.5 h-3.5"></i> 2. 國際海運與港口</span>
+                <span class="bg-sky-900/60 text-sky-200 text-[10px] px-1.5 py-0.2 rounded">航運瓶頸</span>
+              </div>
+              <div id="comp-transport-up-content" class="text-xs space-y-2 mt-2.5"></div>
+            </div>
+          </div>
+
+          <div class="bg-blue-950/30 border-2 border-blue-500/70 rounded-xl p-3.5 flex flex-col justify-between shadow-md relative">
+            <div>
+              <div class="flex items-center justify-between text-blue-300 font-bold text-xs pb-2 border-b border-blue-700/40">
+                <span class="flex items-center gap-1"><i data-lucide="factory" class="w-3.5 h-3.5"></i> 3. 核心深加工與研發</span>
+                <span class="bg-blue-500 text-slate-950 font-bold text-[10px] px-1.5 py-0.2 rounded">焦點核心</span>
+              </div>
+              <div id="comp-core-content" class="text-xs space-y-2 mt-2.5"></div>
+            </div>
+          </div>
+
+          <div class="bg-indigo-950/20 border border-indigo-800/40 rounded-xl p-3.5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-indigo-300 font-bold text-xs pb-2 border-b border-indigo-800/30">
+                <span class="flex items-center gap-1"><i data-lucide="truck" class="w-3.5 h-3.5"></i> 4. 溫控冷鏈與幹線物流</span>
+                <span class="bg-indigo-900/60 text-indigo-200 text-[10px] px-1.5 py-0.2 rounded">物流時效</span>
+              </div>
+              <div id="comp-transport-down-content" class="text-xs space-y-2 mt-2.5"></div>
+            </div>
+          </div>
+
+          <div class="bg-rose-950/20 border border-rose-800/40 rounded-xl p-3.5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-rose-300 font-bold text-xs pb-2 border-b border-rose-800/30">
+                <span class="flex items-center gap-1"><i data-lucide="store" class="w-3.5 h-3.5"></i> 5. 終端通路與客戶</span>
+                <span class="bg-rose-900/60 text-rose-200 text-[10px] px-1.5 py-0.2 rounded">營收變現</span>
+              </div>
+              <div id="comp-downstream-content" class="text-xs space-y-2 mt-2.5"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 bg-slate-800/50 border border-slate-700/60 rounded-xl p-3.5">
+          <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5 mb-2.5">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
+            運輸過程中的關鍵營運風險與股價連動機制
+          </div>
+          <div id="comp-transport-analysis" class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-300 leading-relaxed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 個股財務指標 & 殖利率速查面板 -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded font-bold">基本面速覽</span>
+            <h3 class="font-bold text-slate-900 text-lg">食品業精選個股 · 財務健診與高殖利率速查</h3>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">涵蓋本益比 (PE)、現金殖利率、毛利率、近三年配息率與防禦評價</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-slate-400">排序方式：</span>
+          <button onclick="sortFinancials('yield')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-blue-50 hover:text-blue-700 font-medium transition-colors">依殖利率 ⬇</button>
+          <button onclick="sortFinancials('pe')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-blue-50 hover:text-blue-700 font-medium transition-colors">依本益比 ⬆</button>
+          <button onclick="sortFinancials('margin')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-blue-50 hover:text-blue-700 font-medium transition-colors">依毛利率 ⬇</button>
+        </div>
+      </div>
+
+      <div class="mt-4 overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left text-xs border border-slate-100 rounded-xl overflow-hidden">
+          <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[11px] border-b border-slate-200">
+            <tr>
+              <th class="py-3 px-3.5">代號 / 名稱</th>
+              <th class="py-3 px-3">收盤參考價</th>
+              <th class="py-3 px-3">本益比 (PE)</th>
+              <th class="py-3 px-3 text-blue-600 font-bold">預估殖利率</th>
+              <th class="py-3 px-3">營業毛利率</th>
+              <th class="py-3 px-3">ROE 股東權益報酬</th>
+              <th class="py-3 px-3">近3年平均配息率</th>
+              <th class="py-3 px-3">主要防禦優勢</th>
+              <th class="py-3 px-3 text-right">Yahoo 即時</th>
+            </tr>
+          </thead>
+          <tbody id="financial-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. 【已連動個股】：食品業 3 大核心驅動力（食安、氣候、定價暴利）隨選取股票即時更新！ -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div>
+          <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+            <i data-lucide="shield-check" class="w-5 h-5 text-blue-600"></i>
+            <span id="three-pillars-stock-name">統一 (1216)</span> 專屬三大護城河指標（食安、氣候衝擊、定價權）
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">此三大指標隨上方股票選取即時連動，深度透視該公司的避險能力與超額毛利來源</p>
+        </div>
+        <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md font-medium border border-slate-200">
+          隨選即時連動中
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- 特色 1: 食安認證護城河 -->
+        <div class="bg-slate-50/70 rounded-xl border border-slate-200 p-4 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mb-2.5">
+              <i data-lucide="shield-alert" class="w-4 h-4"></i>
+            </div>
+            <h4 id="pillar1-title" class="font-bold text-slate-900 text-xs sm:text-sm mb-1">
+              TAF 國家級食安檢驗中心護城河
+            </h4>
+            <p id="pillar1-desc" class="text-xs text-slate-600 leading-relaxed">
+              統一自建國家級 TAF 認證實驗室，年投上億元進行農殘與重金屬快篩，防範黑天鵝食安地雷，並淘汰無檢驗實力之中小競業。
+            </p>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-400">
+            <span id="pillar1-tag1">核心防禦：年檢驗逾 10 萬批次</span>
+            <span id="pillar1-tag2" class="text-rose-600 font-semibold">排毒避雷能力：極高</span>
+          </div>
+        </div>
+
+        <!-- 特色 2: 氣候/進口成本敏感度 -->
+        <div class="bg-slate-50/70 rounded-xl border border-slate-200 p-4 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-2.5">
+              <i data-lucide="cloud-sun-rain" class="w-4 h-4"></i>
+            </div>
+            <h4 id="pillar2-title" class="font-bold text-slate-900 text-xs sm:text-sm mb-1">
+              美豆/小麥天候與遠期外匯避險
+            </h4>
+            <p id="pillar2-desc" class="text-xs text-slate-600 leading-relaxed">
+              高度仰賴美國與南美黃豆進口。透過大統益台中港專用碼頭快速卸載，並運用芝加哥期貨 (CBOT) 選擇權鎖定採購基差，平抑聖嬰乾旱衝擊。
+            </p>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-400">
+            <span id="pillar2-tag1">原料依賴：黃豆/小麥海運進口</span>
+            <span id="pillar2-tag2" class="text-amber-600 font-semibold">成本轉嫁力：強</span>
+          </div>
+        </div>
+
+        <!-- 特色 3: 定價黏性與暴利來源 -->
+        <div class="bg-slate-50/70 rounded-xl border border-slate-200 p-4 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5">
+              <i data-lucide="layers" class="w-4 h-4"></i>
+            </div>
+            <h4 id="pillar3-title" class="font-bold text-slate-900 text-xs sm:text-sm mb-1">
+              超商通路終端只漲不跌暴利效應
+            </h4>
+            <p id="pillar3-desc" class="text-xs text-slate-600 leading-relaxed">
+              即飲茶、鮮奶與泡麵等國民商品具備絕對品牌黏著度。通膨調漲售價後永不回跌，當上游黃小玉跌價時，營業毛利率迎來大幅暴衝。
+            </p>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-400">
+            <span id="pillar3-tag1">利潤特徵：原料跌 + 終端價格凍漲</span>
+            <span id="pillar3-tag2" class="text-blue-600 font-semibold">超額毛利週期：爆發中</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 產業與焦點個股近期新聞情報 -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2 mb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="bg-rose-100 text-rose-700 text-xs px-2 py-0.5 rounded font-bold">市場即時動態</span>
+            <h3 class="font-bold text-slate-900 text-lg">食品產業與重點企業近期焦點新聞</h3>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">匯集原物料期貨波動、超商鮮食佈局、海外拓展與重大投資公告</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="https://tw.stock.yahoo.com/news/category/traditional" target="_blank" rel="noopener noreferrer" class="text-xs text-blue-600 hover:underline flex items-center gap-1 font-medium">
+            查看更多傳產/食品新聞
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+      </div>
+
+      <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+  </main>
+
+  <!-- 頁尾 -->
+  <footer class="bg-white border-t border-slate-200 mt-10 py-6 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p>© 2026 台股產業鏈分析工具 · 本系統資料供投資研究參考，非投資買賣建議</p>
+      <div class="flex gap-4">
+        <span>免安裝純前端版本</span>
+        <span>個股診斷 · 進口來源 · 三大護城河指標全連動</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function generateTradingDates() {
+      const dates = [];
+      let cur = new Date(2025, 10, 24);
+      const end = new Date(2026, 10, 24);
+
+      while (cur <= end) {
+        const day = cur.getDay();
+        if (day !== 0 && day !== 6) {
+          const y = cur.getFullYear();
+          const m = String(cur.getMonth() + 1).padStart(2, '0');
+          const d = String(cur.getDate()).padStart(2, '0');
+          dates.push(`${y}/${m}/${d}`);
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+      return dates;
+    }
+
+    const ALL_TRADING_DATES = generateTradingDates();
+
+    function generateStockDailyData(basePrice, volatility, trendBias) {
+      const prices = [];
+      const volumes = [];
+      let current = basePrice * 0.94;
+
+      for (let i = 0; i < ALL_TRADING_DATES.length; i++) {
+        const noise = (Math.random() - 0.485) * volatility;
+        const trend = trendBias;
+        current = current + noise + trend;
+        prices.push(parseFloat(current.toFixed(2)));
+
+        const baseVol = Math.floor(Math.random() * 3500) + 2000;
+        const shockVol = Math.abs(noise) > (volatility * 0.8) ? Math.floor(Math.random() * 7000) : 0;
+        volumes.push(baseVol + shockVol);
+      }
+      return { prices, volumes, baseline: basePrice };
+    }
+
+    // 各個股專屬「三大護城河指標」資料庫 (食安、氣候、定價權)
+    const STOCK_THREE_PILLARS_DATA = {
+      "1216": {
+        name: "統一 (1216)",
+        p1Title: "TAF 國家級食安檢驗中心護城河",
+        p1Desc: "統一自建國家級認證食品安全中心，每年檢驗預算逾億元，對進口黃豆、乳源嚴格抽檢重金屬與黃麴毒素，徹底阻斷黑天鵝倒閉危機。",
+        p1Tag1: "核心防禦：年檢驗逾 10 萬批次",
+        p1Tag2: "排毒避雷能力：極高",
+        p2Title: "美豆/小麥天候與遠期外匯避險",
+        p2Desc: "主要原料黃小玉 95% 依賴美巴海運。藉由大統益台中港專用碼頭快速卸貨，搭配芝加哥期貨選擇權提早鎖定採購基差，平抑氣候乾旱衝擊。",
+        p2Tag1: "原料依賴：黃豆/小麥海運進口",
+        p2Tag2: "成本轉嫁力：極強",
+        p3Title: "超商通路終端只漲不跌暴利效應",
+        p3Desc: "純喫茶、泡麵與 7-11 鮮食具備絕對品牌黏著度。通膨調漲售價後永不回跌，當原物料報價回跌時，營業毛利率迎來顯著暴衝。",
+        p3Tag1: "利潤特徵：原料跌 + 終端價格凍漲",
+        p3Tag2: "超額毛利週期：爆發中"
+      },
+      "1210": {
+        name: "大成 (1210)",
+        p1Title: "禽流感生物安全與溯源系統",
+        p1Desc: "大成建立全封閉智慧水簾雞舍與嚴格洗消走廊，每批白肉雞出欄均具備產銷履歷與抗生素快篩檢驗，有效抵禦冬季禽流感疫情威脅。",
+        p1Tag1: "生物防疫：全封閉負壓水簾禽舍",
+        p1Tag2: "疫情抗性：產業最高級",
+        p2Title: "美國玉米帶氣候與種植意願監控",
+        p2Desc: "飼料核心為美國中西部玉米。密切追蹤 USDA 每週作物生長優良率，若南美乾旱提早增購備用倉儲，將飼料換肉率成本壓至同業最低。",
+        p2Tag1: "原料依賴：美中西部玉米 75%",
+        p2Tag2: "避險機制：台中港大容量穀倉",
+        p3Title: "速食店雞肉長期合約與調價保護",
+        p3Desc: "為麥當勞、肯德基生鮮炸雞主供商，訂有「飼料成本連動加價協議」。當飼料漲時能自動調高出貨價，且舒迷雞胸肉享深加工高毛利。",
+        p3Tag1: "合約保護：成本連動加價機制",
+        p3Tag2: "深加工毛利率：18%~22%"
+      },
+      "1215": {
+        name: "卜蜂 (1215)",
+        p1Title: "正大集團全球品管與溯源認證",
+        p1Desc: "遵循泰國正大全球最高食安規範，南投電宰及深加工廠獲 ISO22000 與 HACCP 認證，生鮮雞肉與超商即食肉品長年零重大食安裁罰。",
+        p1Tag1: "品質認證：ISO22000 / HACCP",
+        p1Tag2: "食安零違規紀錄：優良",
+        p2Title: "全球母集團跨國聯合採購期貨池",
+        p2Desc: "面對國際乾旱與海運費飆漲，卜蜂可共享泰國母集團全球採購折讓，能拿到比台灣一般同業便宜 1%~2% 的原料到港成本。",
+        p2Tag1: "跨國採購：正大集團全球聯合議價",
+        p2Tag2: "原料到港成本：優於同業",
+        p3Title: "超商健身即食雞胸肉高毛利長青",
+        p3Desc: "即食調理肉品毛利率高達 25%，為超商低脂鮮食金牌供應商。健身族對價格敏感度低，即便售價調高至 59 元依舊熱銷。",
+        p3Tag1: "定價韌性：健身族對價格不敏感",
+        p3Tag2: "營業利潤率：食品股前段班"
+      },
+      "1232": {
+        name: "大統益 (1232)",
+        p1Title: "全自動密閉浸出與無溶劑殘留標準",
+        p1Desc: "採用德國最新全自動正己烷浸出技術，沙拉油精煉脫膠脫色脫臭，殘留標準遠嚴於國家標準，為全台營業用沙拉油第一信任品牌。",
+        p1Tag1: "製程技術：全密閉式真空脫臭精煉",
+        p1Tag2: "商業信賴：全台餐飲第一指名",
+        p2Title: "南美與美國大豆壓榨利差 (Crush)",
+        p2Desc: "高度聚焦美國美灣及巴西桑托斯港大豆。核心監測芝加哥大豆壓榨利差，當國外豆粕報價看漲時，台中港滿載運轉壓榨鎖定暴利。",
+        p2Tag1: "監控核心：美國大豆壓榨利差",
+        p2Tag2: "碼頭優勢：台中港專用卸糧泊位",
+        p3Title: "薄利多銷與大股東包銷防禦網",
+        p3Desc: "統一、大成等大股東長期包銷飼料豆粕，內銷 18 公升沙拉油市佔逾 4 成。擁有絕對規模經濟，任何進口商均無法打價格戰撼動其地位。",
+        p3Tag1: "護城河：規模經濟與專用碼頭",
+        p3Tag2: "ROE 穩定度：長年超過 20%"
+      },
+      "2912": {
+        name: "統一超 (2912)",
+        p1Title: "門市三溫層全天候食安稽核",
+        p1Desc: "鮮食廠 24 小時駐廠品檢，門市冷藏櫃與熱食區配備 IoT 溫度即時監控，一旦失溫立即發送警報並自動下架，食安防禦密不透風。",
+        p1Tag1: "監控體系：全台 7000 店 IoT 溫控",
+        p1Tag2: "失溫防護：自動鎖定報廢機制",
+        p2Title: "全球精品咖啡豆合約與國際運費",
+        p2Desc: "CITY CAFE 年消耗數千噸巴西與衣索比亞咖啡豆。由專屬採購團隊提早 1 年簽訂長期保障價格合約，將氣候減產風險降至最低。",
+        p2Tag1: "原產地：巴西 / 哥倫比亞 / 衣索比亞",
+        p2Tag2: "避險方式：一年期遠期合約鎖價",
+        p3Title: "7-11 通路霸權手續費與現煮咖啡暴利",
+        p3Desc: "現煮咖啡毛利率超過 50%，微波鮮食毛利逾 35%。掌握全台最強出海口，掌握所有中上游供應商上架生殺大權，現金流極為龐大。",
+        p3Tag1: "核心金牛：CITY CAFE 毛利 > 50%",
+        p3Tag2: "出海口地位：台灣絕對王者"
+      },
+      "1229": {
+        name: "聯華 (1229)",
+        p1Title: "水手牌特用無添加配方與潔淨標章",
+        p1Desc: "台灣首家取得 Clean Label 潔淨標章之專業麵粉大廠，採用富岡亞洲最先進氣壓研磨技術，阻絕雜質與重金屬，為鼎泰豐指定配方。",
+        p1Tag1: "品質認證：國際潔淨標章 Clean Label",
+        p1Tag2: "標竿客戶：鼎泰豐、知名連鎖烘焙",
+        p2Title: "美國硬紅春麥聯合採購船期平準化",
+        p2Desc: "透過台灣麵粉公會向美國小麥協會聯合採購，船期固定且享有政府農糧專案配額，面對國際糧食通膨時擁有極高防守緩衝墊。",
+        p2Tag1: "採購機制：公會大宗統籌招標採購",
+        p2Tag2: "成本平準化：免受單一船期溢價影響",
+        p3Title: "台積電供應鏈特用高純氣體爆發性毛利",
+        p3Desc: "轉投資聯華氣體供應先進製程超高純度液氮、液氬。半導體氣體毛利率遠高於一般食品業，成為公司獲利高速成長的最強引擎。",
+        p3Tag1: "科技護城河：台積電 EUV 先進氣體主供",
+        p3Tag2: "獲利雙引擎：民生保底 + 科技飆速"
+      }
+    };
+
+    // 深度投資診斷資料庫
+    const STOCK_DEEP_EVAL_DATA = {
+      "1216": {
+        name: "統一 (1216)",
+        badge: "適合長期存股 / 穩健資產配置",
+        badgeClass: "bg-emerald-600 text-white",
+        suitabilityTag: "極適合投資",
+        suitabilityTagClass: "text-emerald-700 bg-emerald-50 border-emerald-200",
+        suitabilityDesc: "<strong>【適合長期存股 / 穩健型投資人】</strong>：統一擁有超商通路 7-11 現金牛，高毛利鮮食佔比超過 35%，抗通膨定價力極強。目前預估殖利率約 4.1%，長年配息率高達 82%，本益比處於 18 倍合理水位，大盤重挫時下檔防禦性極高，適合每月定期定額分批存股。",
+        starRating: "防禦星級：★★★★★",
+        strategy: "建議策略：逢拉回 78~80 元分批承接",
+        imports: [
+          { item: "黃豆 (大豆)", origin: "🇺🇸 美國 65%、🇧🇷 巴西 35%", desc: "大統益台中港專用碼頭卸載，提煉沙拉油與飼料豆粉。" },
+          { item: "小麥 (原糧)", origin: "🇺🇸 美國硬紅春麥 70%、🇦🇺 澳洲白麥 30%", desc: "台南永康廠研磨為高級麵粉，供應統一麵包與泡麵產線。" },
+          { item: "奶粉/乳源", origin: "🇳🇿 紐西蘭 (Fonterra 恆天然合作社)", desc: "供應純喫茶、手搖調配乳品及烘焙奶油香精。" }
+        ],
+        port: "台中港、高雄港專用密閉碼頭",
+        shipType: "巴拿馬型 (Panamax) 6 萬噸散裝貨輪",
+        foreignImpactLevel: "正面偏多 (利差擴大)",
+        foreignImpactClass: "text-emerald-700 bg-emerald-50 border-emerald-200",
+        foreignImpactText: "<strong>【當天國外影響評估：正面利多】</strong><br>1. 芝加哥期貨 (CBOT) 美國黃豆今日微跌 0.8%，巴西農業部預估本季產量創歷史新高，進口原料成本持續走低。<br>2. 波羅的海散裝指數 (BDI) 震盪持平，美西至台灣航線運費平穩，並無塞港溢價。<br><strong>結論：</strong>今日國外原物料與運價偏向溫和，有利統一下半年營業毛利率進一步擴張。"
+      },
+      "1210": {
+        name: "大成 (1210)",
+        badge: "極具性價比 / 低估值波段買進",
+        badgeClass: "bg-blue-600 text-white",
+        suitabilityTag: "極適合進場",
+        suitabilityTagClass: "text-blue-700 bg-blue-50 border-blue-200",
+        suitabilityDesc: "<strong>【適合價值投資 / 成長型存股】</strong>：大成本益比目前僅約 12.8 倍，顯著低於食品類股平均 16~18 倍！嘉義馬稠後新食品調理廠產能全開，舒肥雞胸肉切入各大超商，垂直一貫化肉品毛利持續拉升。預估殖利率達 4.8%，現階段投資風險極低、潛在空間大。",
+        starRating: "成長星級：★★★★★",
+        strategy: "建議策略：53~55 元區間積極布局",
+        imports: [
+          { item: "玉米 (飼料核心)", origin: "🇺🇸 美國 75%、🇧🇷 巴西 25%", desc: "禽畜飼料主要碳水化合物來源，牽動肉雞飼養成本。" },
+          { item: "原種雞 (PS)", origin: "🇺🇸 美國安偉捷 (Aviagen)、歐洲育種場", desc: "引進高健康度原原種白肉雛雞，確保台灣肉料轉換率優勢。" }
+        ],
+        port: "台中港第 28 號碼頭穀物專用筒倉",
+        shipType: "大宗散裝穀物輪 (裕民/慧洋承運)",
+        foreignImpactLevel: "中性偏多 (成本鎖定)",
+        foreignImpactClass: "text-blue-700 bg-blue-50 border-blue-200",
+        foreignImpactText: "<strong>【當天國外影響評估：中性偏多】</strong><br>1. 美國農業部 (USDA) 今日最新供需報告確認全球玉米庫存充足，CBOT 玉米期貨受壓抑在低檔震盪。<br>2. 國際禽流感疫情在北美維持散發，大成提前進口之原種雞存量充足，未受阻斷。<br><strong>結論：</strong>國際玉米成本平穩，肉雞換肉率效益顯著，對今日大成股價形成穩固支撐。"
+      },
+      "1215": {
+        name: "卜蜂 (1215)",
+        badge: "高股息王者 / 獲利長跑冠軍",
+        badgeClass: "bg-purple-600 text-white",
+        suitabilityTag: "強烈建議配置",
+        suitabilityTagClass: "text-purple-700 bg-purple-50 border-purple-200",
+        suitabilityDesc: "<strong>【最適合退休族 / 現金流重度依賴者】</strong>：卜蜂長年股東權益報酬率 (ROE) 超過 18%，營業利益率在食品業名列前茅。預估現金殖利率高達 5.2%，且配息連續 10 年不間斷。超商健身鮮食雞胸肉大宗供貨，營運金流源源不絕，具備極佳的長期持有價值。",
+        starRating: "殖利率星級：★★★★★",
+        strategy: "建議策略：95 元附近支撐強勁，長期持有",
+        imports: [
+          { item: "玉米及高蛋白豆粕", origin: "🇹🇭 泰國正大集團全球期貨中心集中採購", desc: "母集團跨國議價能力強，享有 1.5%~2% 之採購折讓優勢。" },
+          { item: "種豬與生技配方", origin: "🇩🇰 丹麥、🇳🇱 荷蘭高抗病性種豬", desc: "提升仔豬育成率與肉質脂肪分布。" }
+        ],
+        port: "高雄港、台中港專用卸船泊位",
+        shipType: "靈便型 (Handysize) 散裝輪",
+        foreignImpactLevel: "正面偏多 (海外避險佳)",
+        foreignImpactClass: "text-emerald-700 bg-emerald-50 border-emerald-200",
+        foreignImpactText: "<strong>【當天國外影響評估：正面利多】</strong><br>1. 泰國正大總部今日利用期貨選擇權鎖定未來半年散裝運費與穀物基差，有效規避匯率波動。<br>2. 國際豬肉與禽肉出口報價維持高檔，阻絕廉價進口肉品低價傾銷台灣市場。<br><strong>結論：</strong>海外期貨避險得宜，卜蜂國內高毛利地位不受撼動，股價展望正向。"
+      },
+      "1232": {
+        name: "大統益 (1232)",
+        badge: "大豆壓榨獨霸 / 絕對護城河",
+        badgeClass: "bg-slate-700 text-white",
+        suitabilityTag: "穩健定存標的",
+        suitabilityTagClass: "text-slate-700 bg-slate-100 border-slate-300",
+        suitabilityDesc: "<strong>【適合極度保守 / 追求定存替代者】</strong>：全台最大大豆壓榨廠，沙拉油市佔第一。背靠統一、泰山、大成等大股東穩定包銷，加上台中港專屬卸糧碼頭護城河，幾乎無破產可能。預估殖利率 4.5%，波動極小，適合不想看盤、安心領息的投資人。",
+        starRating: "防守星級：★★★★★",
+        strategy: "建議策略：145 元以下安心買，當作定存",
+        imports: [
+          { item: "油重大豆 (非基改/基改)", origin: "🇺🇸 美國密西西比河沿岸 60%、🇧🇷 巴西 40%", desc: "每年經海運直達台中港，進行溶劑萃取提煉毛油與豆粉。" }
+        ],
+        port: "台中港專屬第 27/28 號吸糧碼頭",
+        shipType: "Panamax (每艘載重 6~7 萬噸大豆)",
+        foreignImpactLevel: "中性 (利差平穩)",
+        foreignImpactClass: "text-slate-700 bg-slate-100 border-slate-300",
+        foreignImpactText: "<strong>【當天國外影響評估：中性穩定】</strong><br>1. 巴西港口目前未傳出罷工或塞船延宕，散裝船期維持 35~40 天準時抵達台中港。<br>2. 美國壓榨利差 (Crush Spread) 今日小幅回升，中游加工廠毛利受保護。<br><strong>結論：</strong>進口船期正常、專用碼頭卸載效率高，無海外黑天鵝威脅。"
+      },
+      "2912": {
+        name: "統一超 (2912)",
+        badge: "全台通路龍頭 / 頂級現金流金牛",
+        badgeClass: "bg-indigo-600 text-white",
+        suitabilityTag: "適合長期配置",
+        suitabilityTagClass: "text-indigo-700 bg-indigo-50 border-indigo-200",
+        suitabilityDesc: "<strong>【適合尋求龍頭定價力與長期複利者】</strong>：全台門市破 7,000 間，每天收取數億元現金。CITY CAFE 毛利率高達 50% 以上，鮮食銷售年增逾 15%。雖然本益比約 26 倍偏高，但其不可替代的通路霸權地位讓其享有高估值溢價，殖利率 3.4% 依然穩健。",
+        starRating: "龍頭星級：★★★★★",
+        strategy: "建議策略：265~270 元具長線投資吸引力",
+        imports: [
+          { item: "阿拉比卡與羅布斯塔咖啡豆", origin: "🇧🇷 巴西、🇨🇴 哥倫比亞、🇪🇹 衣索比亞", desc: "CITY CAFE 年銷逾 3.2 億杯的核心原料，全球合約採購。" },
+          { item: "進口糖果/零食/日系鮮食配方", origin: "🇯🇵 日本 7-Eleven 技術授權與原裝輸入", desc: "引進日本冷鏈鮮食研發技術，維持高客單價吸引力。" }
+        ],
+        port: "基隆港、台北港、高雄港溫控貨櫃碼頭",
+        shipType: "冷藏貨櫃輪 (Container Reefer)",
+        foreignImpactLevel: "中性偏正面 (咖啡豆產量回升)",
+        foreignImpactClass: "text-emerald-700 bg-emerald-50 border-emerald-200",
+        foreignImpactText: "<strong>【當天國外影響評估：正面偏多】</strong><br>1. 國際咖啡期貨 (KC) 近期自歷史高檔震盪回檔，烘焙咖啡豆進口成本壓力稍緩。<br>2. 菲律賓海外轉投資門市單店營收 (SSSG) 繳出雙位數增長成績單。<br><strong>結論：</strong>原物料成本受控且海外擴張順遂，當天國際情勢對統一超具中長期推力。"
+      },
+      "1229": {
+        name: "聯華 (1229)",
+        badge: "民生麵粉 + 半導體氣體雙引擎",
+        badgeClass: "bg-teal-600 text-white",
+        suitabilityTag: "強烈推薦 (兼具科技動能)",
+        suitabilityTagClass: "text-teal-700 bg-teal-50 border-teal-200",
+        suitabilityDesc: "<strong>【兼具防禦與科技成長的罕見黑馬】</strong>：不僅是台灣最大麵粉廠（水手牌），更轉投資持股「聯華氣體」——是台積電先進製程超高純度工業氣體的頭號供應商！既有食品股 4.4% 的高殖利率下檔保護，又有 AI 半導體擴廠的巨大獲利動能，非常值得長期投資！",
+        starRating: "綜合星級：★★★★★",
+        strategy: "建議策略：62~64 元區間積極卡位",
+        imports: [
+          { item: "高筋/特級小麥原糧", origin: "🇺🇸 美國、🇦🇺 澳洲", desc: "台灣麵粉公會聯合招標，富岡全亞洲最先進電腦氣壓磨粉廠加工。" },
+          { item: "特用化學氣體原料", origin: "🇩🇪 德國林德集團 (Linde) 國際技術授權", desc: "合資成立聯華林德，供應極紫外光 (EUV) 先進製程高純氣體。" }
+        ],
+        port: "基隆港、台中港專用卸糧管道",
+        shipType: "專用小麥散裝船 + 低溫高壓氣體專用槽船",
+        foreignImpactLevel: "強力偏多 (半導體擴廠加持)",
+        foreignImpactClass: "text-teal-700 bg-teal-50 border-teal-200",
+        foreignImpactText: "<strong>【當天國外影響評估：強烈利多】</strong><br>1. 美國小麥期貨平穩無異狀，國內麵粉內需價格穩固。<br>2. 國際半導體巨頭海外擴產需求高漲，合資夥伴德國林德集團今日美股大漲，帶動特用氣體權益法投資收益水漲船高。<br><strong>結論：</strong>科技與民生雙重利多共振，是防禦型標的中最具爆發力的一檔。"
+      }
+    };
+
+    const STOCK_DAILY_SERIES = {
+      "1216": {
+        name: "統一 (1216.TW)",
+        tag: "食品龍頭 · 全產業整合",
+        rating: "偏多看好",
+        targetRange: "78.0 ~ 92.0 元",
+        targetHigh: 88.5,
+        targetMid: 85.0,
+        targetLow: 81.0,
+        yieldNote: "預估潛在總報酬率：約 12% ~ 18% (含 4.1% 現金殖利率)",
+        driver: "國際黃小玉原料報價持續走低，中下游加工利差擴大；7-11 鮮食營收維持雙位數增長，菲律賓超商展店突破 4000 店挹注海外收益。",
+        risk: "若巴拿馬運河乾旱或紅海地緣政治再度推升散裝海運運費，將延緩毛利率爬坡速度。",
+        ...generateStockDailyData(80.5, 0.42, 0.02)
+      },
+      "1210": {
+        name: "大成 (1210.TW)",
+        tag: "低估值 · 產能擴張",
+        rating: "強力買進",
+        targetRange: "53.0 ~ 68.0 元",
+        targetHigh: 65.0,
+        targetMid: 61.5,
+        targetLow: 56.5,
+        yieldNote: "預估潛在總報酬率：約 15% ~ 24% (含 4.8% 現金殖利率)",
+        driver: "嘉義馬稠後食品調理廠產能全開，舒肥雞胸肉切入超商供應鏈；本益比僅 12.8 倍，處於歷史相對低檔區間。",
+        risk: "冬季禽流感疫情若擴大撲殺，或台灣毛豬價格劇烈波動。",
+        ...generateStockDailyData(55.8, 0.38, 0.015)
+      },
+      "1215": {
+        name: "卜蜂 (1215.TW)",
+        tag: "高殖利率王 · 獲利資優生",
+        rating: "偏多看好",
+        targetRange: "95.0 ~ 118.0 元",
+        targetHigh: 112.0,
+        targetMid: 106.0,
+        targetLow: 99.0,
+        yieldNote: "預估潛在總報酬率：約 14% ~ 22% (含 5.2% 現金殖利率)",
+        driver: "高毛利加工調理肉品佔比突破 25%，超商健身即食商品長青，長年 ROE 高達 18% 以上，配息政策大方穩定。",
+        risk: "原物料玉米國際期貨若出現地緣政治單季暴衝。",
+        ...generateStockDailyData(98.2, 0.65, 0.03)
+      },
+      "1232": {
+        name: "大統益 (1232.TW)",
+        tag: "定存神股 · 護城河深",
+        rating: "中立穩健",
+        targetRange: "142.0 ~ 162.0 元",
+        targetHigh: 158.0,
+        targetMid: 153.0,
+        targetLow: 147.0,
+        yieldNote: "預估潛在總報酬率：約 8% ~ 13% (含 4.5% 現金殖利率)",
+        driver: "台中港專用卸糧碼頭具備每小時千噸卸貨能力，內銷沙拉油市佔超過 4 成，幾乎無國內競爭對手可動搖。",
+        risk: "美豆壓榨毛利若遇南美豐產壓抑豆粕報價。",
+        ...generateStockDailyData(148.5, 0.70, 0.01)
+      },
+      "2912": {
+        name: "統一超 (2912.TW)",
+        tag: "零售王者 · 高現金流",
+        rating: "偏多看好",
+        targetRange: "268.0 ~ 315.0 元",
+        targetHigh: 305.0,
+        targetMid: 292.0,
+        targetLow: 278.0,
+        yieldNote: "預估潛在總報酬率：約 10% ~ 17% (含 3.4% 現金殖利率)",
+        driver: "全台突破 7000 店，鮮食營收佔比衝破 35%，OPENPOINT 點數生態圈綁定 1700 萬用戶高頻消費，CITY CAFE 利潤豐厚。",
+        risk: "超商門市展店飽和度與司機夜間加給勞動成本上升。",
+        ...generateStockDailyData(276.0, 1.35, 0.035)
+      },
+      "1229": {
+        name: "聯華 (1229.TW)",
+        tag: "雙引擎 · 麵粉+電子氣體",
+        rating: "強力買進",
+        targetRange: "62.0 ~ 78.0 元",
+        targetHigh: 74.0,
+        targetMid: 69.5,
+        targetLow: 65.0,
+        yieldNote: "預估潛在總報酬率：約 15% ~ 25% (含 4.4% 現金殖利率)",
+        driver: "水手牌麵粉獲利穩如泰山；轉投資聯華氣體受惠台積電先進製程擴廠需求，特用化學氣體收益爆發成長。",
+        risk: "半導體建廠週期放緩或全球小麥歉收。",
+        ...generateStockDailyData(64.2, 0.40, 0.02)
+      }
+    };
+
+    const FINANCIAL_DATA = [
+      { code: "1216", name: "統一", price: "80.5", pe: "18.2", yield: "4.1%", margin: "33.8%", roe: "14.2%", payout: "82%", defense: "超商通路現金流極為龐大，民生品牌抗通膨" },
+      { code: "1210", name: "大成", price: "55.8", pe: "12.8", yield: "4.8%", margin: "14.6%", roe: "11.5%", payout: "65%", defense: "白肉雞一貫化完整，新廠產能開出挹注毛利" },
+      { code: "1215", name: "卜蜂", price: "98.2", pe: "13.6", yield: "5.2%", margin: "16.1%", roe: "18.3%", payout: "71%", defense: "超商即食雞胸肉大宗供應商，配息穩定高殖利率" },
+      { code: "1232", name: "大統益", price: "148.5", pe: "19.5", yield: "4.5%", margin: "12.8%", roe: "21.6%", payout: "88%", defense: "台灣沙拉油市佔第一，台中港專用碼頭成本優勢" },
+      { code: "2912", name: "統一超", price: "276.0", pe: "26.5", yield: "3.4%", margin: "34.5%", roe: "29.8%", payout: "86%", defense: "全台超過7000店通路霸主，CITY CAFE高毛利" },
+      { code: "1229", name: "聯華", price: "64.2", pe: "16.0", yield: "4.4%", margin: "19.2%", roe: "10.4%", payout: "75%", defense: "水手牌麵粉內需強勁，轉投資半導體化學氣體收益" },
+      { code: "1234", name: "黑松", price: "39.5", pe: "15.1", yield: "4.7%", margin: "28.3%", roe: "9.2%", payout: "78%", defense: "微風廣場大筆土地資產，金門高粱台灣經銷金雞母" },
+      { code: "1225", name: "福懋油", price: "72.0", pe: "22.0", yield: "3.2%", margin: "9.5%", roe: "8.7%", payout: "60%", defense: "食用油脂與麵粉主力，中部大宗穀物轉運樞紐" },
+      { code: "5903", name: "全家", price: "192.5", pe: "24.2", yield: "3.6%", margin: "35.8%", roe: "22.1%", payout: "80%", defense: "4200+店第二大超商，霜淇淋與甜點爆品行銷強" }
+    ];
+
+    const NEWS_DATA = [
+      {
+        tag: "原物料期貨",
+        tagClass: "bg-amber-100 text-amber-800",
+        date: "2026-11-20",
+        title: "CBOT黃豆期貨震盪整理，USDA預估南美豐收壓抑進口成本",
+        summary: "受巴西產區降雨改善推升豐收預期，黃豆期貨報價持穩。法人評估將有助大統益(1232)、統一(1216)第四季壓榨與飼料成本壓力大幅舒緩。",
+        source: "Yahoo奇摩股市 / 財經即時",
+        link: "https://tw.stock.yahoo.com/quote/1232.TW"
+      },
+      {
+        tag: "通路鮮食",
+        tagClass: "bg-emerald-100 text-emerald-800",
+        date: "2026-11-18",
+        title: "統一超(2912)鮮食營收佔比衝破35%，攜手卜蜂(1215)推高蛋白溫控專區",
+        summary: "因應健康健身趨勢，7-ELEVEN擴大冷藏溫控鮮食櫃位，聯名雞胸肉與舒肥餐點銷售年增逾15%，帶動供應商卜蜂毛利率站穩高檔。",
+        source: "經濟日報 / 產業脈動",
+        link: "https://tw.stock.yahoo.com/quote/2912.TW"
+      },
+      {
+        tag: "海運物流",
+        tagClass: "bg-sky-100 text-sky-800",
+        date: "2026-11-15",
+        title: "散裝BDI指數築底回溫，大成(1210)嘉義智慧冷鏈物流中心全面投產",
+        summary: "面對散裝船期不確定性，大成強化智慧倉儲與低溫分切產線，每日可處理10萬份生鮮調理包，縮短自電宰到超商上架至24小時以內。",
+        source: "工商時報 / 物流科技",
+        link: "https://tw.stock.yahoo.com/quote/1210.TW"
+      },
+      {
+        tag: "海外擴張",
+        tagClass: "bg-indigo-100 text-indigo-800",
+        date: "2026-11-10",
+        title: "統一(1216)加速東南亞戰略佈局，菲律賓7-11突破4,000店里程碑",
+        summary: "統一集團在菲律賓超商市佔率已超過80%，成為當地絕對龍頭。海外飲料與泡麵出貨動能強勁，有效分散台灣內需市場成熟之飽和壓力。",
+        source: "中央社 / 企業全球化",
+        link: "https://tw.stock.yahoo.com/quote/1216.TW"
+      },
+      {
+        tag: "抗通膨配息",
+        tagClass: "bg-purple-100 text-purple-800",
+        date: "2026-11-05",
+        title: "高股息ETF換股點名食品類股，卜蜂(1215)、大統益(1232)殖利率吸睛",
+        summary: "多檔台股高息型ETF近期審核成分股，食品類股因長年配息率高達7成以上、現金流穩健，且受景氣下行衝擊小，成為防禦型買盤焦點。",
+        source: "理財周刊 / ETF動向",
+        link: "https://tw.stock.yahoo.com/quote/1215.TW"
+      },
+      {
+        tag: "食安冷鏈",
+        tagClass: "bg-rose-100 text-rose-800",
+        date: "2026-10-28",
+        title: "食藥署升級進口大宗穀物真菌毒素抽驗，龍頭廠自檢實驗室優勢浮現",
+        summary: "官方強化邊境抽驗後，具備第三方認證實驗室的統一、聯華等大廠能及時在港口完成快篩入庫，大幅降低滯港與退運罰則成本。",
+        source: "食力 / 食品安全網",
+        link: "https://tw.stock.yahoo.com/quote/1229.TW"
+      }
+    ];
+
+    const COMPANY_PROFILES = {
+      "1216": {
+        name: "統一企業 (1216.TW)",
+        category: "食品龍頭 · 全產業鏈垂直整合",
+        summary: "身為台灣食品霸主，統一橫跨中游加工到下游品牌，其上游採購鏈牽動國際散裝船運，內部冷鏈物流（統一速達黑貓、捷盛運輸）則成為串連下游 7-11 與零售的關鍵命脈。",
+        upstream: [
+          { name: "大統益 (1232)", role: "統一持股大廠，供應黃豆油與豆粕" },
+          { name: "國際穀物四大商 (ABCD)", role: "嘉吉、ADM等進口黃豆與小麥原糧" },
+          { name: "宏全 (9939)", role: "PET瓶與包材無菌充填" }
+        ],
+        transportUp: [
+          { name: "散裝航運 (BDI指數)", role: "巴拿馬型散裝船運大宗穀物至台中港" },
+          { name: "港口密閉筒倉", role: "穀物快速卸載防潮貯存" }
+        ],
+        core: [
+          { name: "統一永康/楊梅/麻豆廠", role: "麵粉研磨、飼料、泡麵與茶飲充填" },
+          { name: "TAF認證食安檢驗中心", role: "年投逾億元防範原料農殘食安黑天鵝" }
+        ],
+        transportDown: [
+          { name: "統一速達 (黑貓宅急便)", role: "-18°C~4°C低溫冷鏈車隊，超商日配" },
+          { name: "捷盛運輸 (專屬重卡)", role: "工廠至各大物流中心(DC)幹線配送" }
+        ],
+        downstream: [
+          { name: "統一超 (2912) 7-11", role: "全台7000+超商，最強出海口與金牛" },
+          { name: "全聯 / 家樂福量販", role: "家庭號大包裝食品量販通路" }
+        ],
+        transportAnalysis: [
+          {
+            title: "🚢 散裝海運與塞港風險",
+            desc: "若波羅的海指數 (BDI) 飆升或紅海/運河塞港，黃豆與小麥到港成本暴增，船期每延遲一週，迫使動用高成本安全庫存。"
+          },
+          {
+            title: "❄️ 冷鏈溫控斷鏈食安風險",
+            desc: "鮮乳、茶飲與超商鮮食需全程維持 4°C~7°C。一旦夏季物流車輛冷氣故障失溫，整車產品面臨直接銷毀與巨額商譽受損。"
+          },
+          {
+            title: "⛽ 柴油油價與司機人力短缺",
+            desc: "黑貓與捷盛車隊每日巡迴全台。油價每上漲 10%，車隊營運利潤即被侵蝕，近年司機薪資上漲亦推動自建智慧自動化倉儲。"
+          }
+        ]
+      },
+      "1210": {
+        name: "大成 (1210.TW)",
+        category: "農畜霸主 · 飼料與白肉雞一貫化",
+        summary: "台灣農畜與飼料領導大廠，具備最完整的白肉雞垂直一貫化產銷整合（育種、飼料、電宰、鮮食），獲利直接受進口玉米航運與禽肉冷鏈影響。",
+        upstream: [
+          { name: "國際穀物進口商", role: "採購黃豆、玉米作為飼料原料" },
+          { name: "進口種雞育種場", role: "美歐引進原種雞確保生長勢" }
+        ],
+        transportUp: [
+          { name: "大宗散裝貨輪 (裕民/慧洋)", role: "台中港專用吸糧機快速卸載玉米" },
+          { name: "密閉式散裝飼料車", role: "防潮直接運往各大飼料加工廠" }
+        ],
+        core: [
+          { name: "大成自動化電宰廠", role: "全自動禽肉分切屠宰線" },
+          { name: "嘉義馬稠後食品廠", role: "全台最大單一調理食品廠，舒迷雞胸肉" }
+        ],
+        transportDown: [
+          { name: "低溫冷藏掛肉車", role: "凌晨 0~4 點溫控急送傳統批發與量販" },
+          { name: "鮮食急凍配送隊", role: "供應各大超商鮮食調理工廠原料" }
+        ],
+        downstream: [
+          { name: "麥當勞 / 肯德基速食", role: "長期供應生鮮炸雞塊與雞排肉品" },
+          { name: "連鎖超商 (7-11/全家)", role: "即食舒迷低卡雞胸肉主力供應" }
+        ],
+        transportAnalysis: [
+          {
+            title: "🚢 玉米海運到港及時率",
+            desc: "養殖活雞不能停糧。船期延遲將導致配方調度受限，增加原料倉儲利息與防霉成本。"
+          },
+          {
+            title: "❄️ 白肉雞生鮮保鮮時效",
+            desc: "生鮮雞肉保質期僅 3~5 天，從屠宰到送達速食廚房需 24 小時內以 0~4°C 完成配送。"
+          },
+          {
+            title: "🧬 運禽車輛洗消檢驗",
+            desc: "禽流感季節進出養殖場車輛需嚴格高壓消毒，否則容易成為疫情傳播媒介引發連鎖撲殺。"
+          }
+        ]
+      },
+      "1215": {
+        name: "卜蜂 (1215.TW)",
+        category: "高獲利肉品 · 正大集團在台旗艦",
+        summary: "肉雞、生鮮豬肉與加工調理食品三箭齊發，營運效率與毛利率長年居食品股前段班，冷鏈物流與超商鮮食深度綁定。",
+        upstream: [
+          { name: "正大集團全球期貨採購", role: "跨國集團聯合採購議價與避險" },
+          { name: "優良種豬與種雞場", role: "高肉料轉換率 (FCR) 品種" }
+        ],
+        transportUp: [
+          { name: "國際散裝船運", role: "運送穀物至高雄港、台中港" }
+        ],
+        core: [
+          { name: "南投飼料廠與深加工廠", role: "全自動加工生產即食肉品、香腸與冷凍炸雞" }
+        ],
+        transportDown: [
+          { name: "專屬冷藏冷凍配送大隊", role: "日夜排班急送超商與量販超市" }
+        ],
+        downstream: [
+          { name: "全台超商鮮食專櫃", role: "供應健身低脂即食雞胸肉" },
+          { name: "Costco / 好市多大賣場", role: "冷凍炸雞塊、生鮮分切雞肉熱銷" }
+        ],
+        transportAnalysis: [
+          {
+            title: "🚢 原料海運避險策略",
+            desc: "利用國際集團採購與期貨鎖定海運提單，減少單一航線波動對原料成本的負面衝擊。"
+          },
+          {
+            title: "❄️ 超商生鮮鮮度補貨",
+            desc: "超商門市庫存極小化，要求廠商每天依銷售數據微調補貨，對冷鏈調度彈性要求極高。"
+          },
+          {
+            title: "⚡ 能源與低溫電費敏感",
+            desc: "冷凍深加工需大量電力維持 -20°C 庫存，工業電價調整將直接影響營業費用率。"
+          }
+        ]
+      },
+      "1232": {
+        name: "大統益 (1232.TW)",
+        category: "沙拉油霸主 · 台中港專屬碼頭護城河",
+        summary: "台灣最大的黃豆壓榨與沙拉油製造廠（美食家大豆沙拉油），由統一、泰山、大成等合資入股，具備極佳的規模壓榨利差與護城河。",
+        upstream: [
+          { name: "美國與巴西黃豆農場", role: "進口高油高蛋白大豆" }
+        ],
+        transportUp: [
+          { name: "Panamax 級大散裝輪", role: "每趟 6 萬噸黃豆直達台中港專屬碼頭" }
+        ],
+        core: [
+          { name: "台中港大型壓榨廠", role: "日壓榨數千噸，產出沙拉油與高蛋白豆粉" }
+        ],
+        transportDown: [
+          { name: "專用大宗食用油罐車", role: "高溫保溫罐車運送精製油至各大食品加工廠" },
+          { name: "粉粒物料散裝罐車", role: "載送脫脂黃豆粕至各大飼料廠" }
+        ],
+        downstream: [
+          { name: "統一、大成等飼料廠", role: "供應優質黃豆粕作為動物飼料蛋白質來源" },
+          { name: "全台餐飲小吃通路", role: "18公升桶裝美食家大豆油直供全台小吃與餐廳" }
+        ],
+        transportAnalysis: [
+          {
+            title: "🚢 港口專屬卸糧機效率",
+            desc: "專用碼頭擁有每小時千噸卸載能力，能避開一般碼頭塞船罰款 (Demurrage)，建立厚實利差護城河。"
+          },
+          {
+            title: "🚛 油罐專車清潔與食安",
+            desc: "散裝食用油罐車回程洗槽驗收嚴苛，嚴防交叉污染；高油價時期油罐車運費會及時轉嫁。"
+          },
+          {
+            title: "🌾 天候與巴拿馬運河限縮",
+            desc: "美東大豆走運河若遇乾旱排隊，可能導致台中廠船期脫節，改走好望角增加航程與運費。"
+          }
+        ]
+      },
+      "2912": {
+        name: "統一超 (2912.TW)",
+        category: "超商通路霸主 · 7-ELEVEN 零售王國",
+        summary: "全台超過 7,000 間門市，掌控龐大民生消費現金流與大數據，是所有中上游食品大廠最渴望爭取且依賴的核心出海口。",
+        upstream: [
+          { name: "統一企業 (1216)", role: "常溫即飲茶、乳品、即食泡麵主要供應" },
+          { name: "卜蜂 (1215) / 大成 (1210)", role: "低溫鮮食、雞胸肉、微波便當肉品來源" }
+        ],
+        transportUp: [
+          { name: "大榮 / 捷盛幹線車隊", role: "每日將各廠貨物集中運往區域集散中心 (DC)" }
+        ],
+        core: [
+          { name: "全台多座智慧鮮食廠", role: "24 小時連續生產飯糰、便當、三明治" },
+          { name: "門市 POS 大數據分析中心", role: "依天氣與商圈即時預測訂購量" }
+        ],
+        transportDown: [
+          { name: "全溫層配送車隊 (常/冷/凍)", role: "每輛車搭載四溫層，每日對全台門市二至三配" }
+        ],
+        downstream: [
+          { name: "全台 7,000+ 門市消費者", role: "現煮咖啡、微波鮮食、日常零售消費" },
+          { name: "OPENPOINT 點數生態圈", role: "超過 1,700 萬會員高頻率重複回購" }
+        ],
+        transportAnalysis: [
+          {
+            title: "🏪 零庫存極限配送挑戰",
+            desc: "超商門市後場極小，無法囤積庫存，完全依賴物流車隊準時在清晨與午後送達，配送延誤直接造成門市缺貨貨架落空。"
+          },
+          {
+            title: "🌡️ 鮮食 18°C 飯糰黃金溫控",
+            desc: "鮮食便當米飯需維持在 18°C 最佳口感，與 4°C 冷藏飲料分溫層運送，冷鏈車技術與保溫隔板維護成本極高。"
+          },
+          {
+            title: "📈 司機工時法規與運費調漲",
+            desc: "一例一休及夜間配送法規使超商物流人事成本居高不下，推動統一超投入無人自駕搬運與智販機佈局。"
+          }
+        ]
+      },
+      "1229": {
+        name: "聯華 (1229.TW)",
+        category: "麵粉龍頭 · 兼具半導體化學氣體控股",
+        summary: "台灣歷史悠久的麵粉霸主（水手牌麵粉），內需獲利極為穩健；更因轉投資聯華氣體（台積電先進製程特用氣體主供商）而兼具科技成長動能。",
+        upstream: [
+          { name: "美國小麥協會 / 澳洲小麥", role: "進口硬紅春麥、高筋特級小麥原糧" }
+        ],
+        transportUp: [
+          { name: "散裝小麥貨輪", role: "基隆港/台中港專用卸糧管道進口" }
+        ],
+        core: [
+          { name: "富岡智慧麵粉廠", role: "全亞洲最先進電腦控制氣壓磨粉產線" },
+          { name: "轉投資聯華神通集團", role: "聯華氣體、聯強國際、聯成化學轉投資收益" }
+        ],
+        transportDown: [
+          { name: "散裝麵粉罐車", role: "直供各大中央烘焙工廠、麵包鏈" },
+          { name: "常溫袋裝物流", role: "22公斤營業用麵粉袋送往全台麵包店" }
+        ],
+        downstream: [
+          { name: "統一、統一超烘焙產線", role: "供應吐司、甜麵包之水手牌麵粉" },
+          { name: "全台知名烘焙與麵點連鎖", role: "鼎泰豐、各大手工麵包店專用配方粉" }
+        ],
+        transportAnalysis: [
+          {
+            title: "🚢 小麥海運與農糧協防",
+            desc: "台灣麵粉公會聯合採購美麥，散裝船期規律，但在國際運價飆漲時仍需繳納額外海運附加費。"
+          },
+          {
+            title: "🌧️ 陸運防潮與防蟲防霉",
+            desc: "麵粉吸濕性極強，雨季運送若散裝車密封不良滲水將導致麵粉結塊變質，產生退貨損失。"
+          },
+          {
+            title: "💡 特用化學氣體低溫槽車",
+            desc: "其轉投資之聯華氣體運送超高純度液氮、液氬至晶圓代工廠，需要極高規格低溫槽車與專屬路線管理。"
+          }
+        ]
+      }
+    };
+
+    let chartInstance = null;
+    let currentStockCode = "1216";
+    let currentRangeMode = "6M";
+    let customStartDate = "2026/05/26";
+    let customEndDate = "2026/11/24";
+
+    function initPage() {
+      lucide.createIcons();
+      renderCompanyProfile("1216");
+      renderDeepEvaluation("1216");
+      renderThreePillars("1216");
+      renderChartWithFilter("1216");
+      renderFinancialTable(FINANCIAL_DATA);
+      renderNews(NEWS_DATA);
+    }
+
+    function changeCompany(code) {
+      currentStockCode = code;
+      renderCompanyProfile(code);
+      renderDeepEvaluation(code);
+      renderThreePillars(code);
+      renderChartWithFilter(code);
+
+      const sel1 = document.getElementById('company-select');
+      const sel2 = document.getElementById('stock-chart-select');
+      if (sel1) sel1.value = code;
+      if (sel2) sel2.value = code;
+    }
+
+    // 渲染專屬三大護城河指標 (食安、氣候、定價權)
+    function renderThreePillars(code) {
+      const data = STOCK_THREE_PILLARS_DATA[code] || STOCK_THREE_PILLARS_DATA["1216"];
+
+      document.getElementById('three-pillars-stock-name').innerText = data.name;
+      
+      // 卡片 1
+      document.getElementById('pillar1-title').innerText = data.p1Title;
+      document.getElementById('pillar1-desc').innerText = data.p1Desc;
+      document.getElementById('pillar1-tag1').innerText = data.p1Tag1;
+      document.getElementById('pillar1-tag2').innerText = data.p1Tag2;
+
+      // 卡片 2
+      document.getElementById('pillar2-title').innerText = data.p2Title;
+      document.getElementById('pillar2-desc').innerText = data.p2Desc;
+      document.getElementById('pillar2-tag1').innerText = data.p2Tag1;
+      document.getElementById('pillar2-tag2').innerText = data.p2Tag2;
+
+      // 卡片 3
+      document.getElementById('pillar3-title').innerText = data.p3Title;
+      document.getElementById('pillar3-desc').innerText = data.p3Desc;
+      document.getElementById('pillar3-tag1').innerText = data.p3Tag1;
+      document.getElementById('pillar3-tag2').innerText = data.p3Tag2;
+
+      lucide.createIcons();
+    }
+
+    // 渲染專屬深度投資診斷卡片
+    function renderDeepEvaluation(code) {
+      const data = STOCK_DEEP_EVAL_DATA[code] || STOCK_DEEP_EVAL_DATA["1216"];
+
+      document.getElementById('eval-company-name').innerText = data.name;
+      
+      const vBadge = document.getElementById('eval-verdict-badge');
+      vBadge.className = `self-start sm:self-auto px-3 py-1 rounded-lg text-xs font-bold shadow-2xs ${data.badgeClass}`;
+      vBadge.innerText = data.badge;
+
+      const sTag = document.getElementById('eval-suitability-tag');
+      sTag.className = `text-[11px] font-bold px-2 py-0.5 rounded border ${data.suitabilityTagClass}`;
+      sTag.innerText = data.suitabilityTag;
+
+      document.getElementById('eval-suitability-text').innerHTML = data.suitabilityDesc;
+      document.getElementById('eval-strategy-text').innerText = data.strategy;
+      document.getElementById('eval-star-rating').innerText = data.starRating;
+
+      // 渲染進口國
+      document.getElementById('eval-import-origins').innerHTML = data.imports.map(imp => `
+        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+          <div class="font-bold text-slate-800 text-xs flex items-center justify-between">
+            <span>${imp.item}</span>
+            <span class="text-blue-700 font-medium">${imp.origin}</span>
+          </div>
+          <div class="text-[11px] text-slate-500 mt-0.5">${imp.desc}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('eval-port-text').innerText = `到港港口：${data.port}`;
+      document.getElementById('eval-shiptype-text').innerText = `運送：${data.shipType}`;
+
+      // 渲染國外影響
+      const fTag = document.getElementById('eval-foreign-impact-level');
+      fTag.className = `text-[11px] font-bold px-2 py-0.5 rounded border ${data.foreignImpactClass}`;
+      fTag.innerText = data.foreignImpactLevel;
+      document.getElementById('eval-foreign-impact-text').innerHTML = data.foreignImpactText;
+
+      lucide.createIcons();
+    }
+
+    function setRangePreset(mode) {
+      currentRangeMode = mode;
+      document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('range-btn-active'));
+      const activeBtn = document.getElementById(`btn-range-${mode}`);
+      if (activeBtn) activeBtn.classList.add('range-btn-active');
+      renderChartWithFilter(currentStockCode);
+    }
+
+    function applyCustomDateRange() {
+      const sVal = document.getElementById('custom-start-date').value.replace(/-/g, '/');
+      const eVal = document.getElementById('custom-end-date').value.replace(/-/g, '/');
+
+      if (sVal >= eVal) {
+        alert("開始日期必須早於結束日期！");
+        return;
+      }
+
+      currentRangeMode = "CUSTOM";
+      customStartDate = sVal;
+      customEndDate = eVal;
+
+      document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('range-btn-active'));
+      renderChartWithFilter(currentStockCode);
+    }
+
+    function renderChartWithFilter(code) {
+      const data = STOCK_DAILY_SERIES[code] || STOCK_DAILY_SERIES["1216"];
+
+      const lastPrice = data.prices[data.prices.length - 1];
+      const prevPrice = data.prices[data.prices.length - 2];
+      const diff = parseFloat((lastPrice - prevPrice).toFixed(2));
+      const pct = parseFloat(((diff / prevPrice) * 100).toFixed(2));
+      const isUp = diff >= 0;
+
+      document.getElementById('chart-stock-name').innerText = data.name;
+      document.getElementById('chart-stock-price').innerText = lastPrice.toFixed(2);
+      document.getElementById('chart-stock-change').className = `text-sm font-bold flex items-center gap-0.5 ${isUp ? 'text-red-600' : 'text-green-600'}`;
+      document.getElementById('chart-stock-change').innerHTML = `
+        ${isUp ? '▲ +' : '▼ '}${diff} (${isUp ? '+' : ''}${pct}%)
+      `;
+      document.getElementById('chart-stock-tag').innerText = data.tag;
+      document.getElementById('forecast-rating').innerText = data.rating;
+      document.getElementById('forecast-target-range').innerText = data.targetRange;
+      document.getElementById('forecast-yield-note').innerText = data.yieldNote;
+      document.getElementById('forecast-driver').innerText = data.driver;
+      document.getElementById('forecast-risk').innerText = data.risk;
+      document.getElementById('yahoo-chart-btn').href = `https://tw.stock.yahoo.com/quote/${code}.TW`;
+
+      const totalLen = ALL_TRADING_DATES.length;
+      let startIdx = 0;
+      let endIdx = totalLen - 1;
+
+      if (currentRangeMode === "1M") {
+        startIdx = Math.max(0, totalLen - 22);
+        document.getElementById('current-range-display').innerText = `顯示區間：近 1 個月 (${ALL_TRADING_DATES[startIdx]} ~ ${ALL_TRADING_DATES[endIdx]})`;
+      } else if (currentRangeMode === "3M") {
+        startIdx = Math.max(0, totalLen - 66);
+        document.getElementById('current-range-display').innerText = `顯示區間：近 3 個月 (${ALL_TRADING_DATES[startIdx]} ~ ${ALL_TRADING_DATES[endIdx]})`;
+      } else if (currentRangeMode === "6M") {
+        startIdx = Math.max(0, totalLen - 130);
+        document.getElementById('current-range-display').innerText = `顯示區間：近 6 個月 (${ALL_TRADING_DATES[startIdx]} ~ ${ALL_TRADING_DATES[endIdx]})`;
+      } else if (currentRangeMode === "1Y") {
+        startIdx = 0;
+        document.getElementById('current-range-display').innerText = `顯示區間：近 1 年全景 (${ALL_TRADING_DATES[startIdx]} ~ ${ALL_TRADING_DATES[endIdx]})`;
+      } else if (currentRangeMode === "CUSTOM") {
+        const sI = ALL_TRADING_DATES.findIndex(d => d >= customStartDate);
+        const eI = ALL_TRADING_DATES.findIndex(d => d >= customEndDate);
+        startIdx = sI !== -1 ? sI : 0;
+        endIdx = eI !== -1 ? eI : totalLen - 1;
+        document.getElementById('current-range-display').innerText = `自訂區間：${ALL_TRADING_DATES[startIdx]} 至 ${ALL_TRADING_DATES[endIdx]}`;
+      }
+
+      let slicedDates = ALL_TRADING_DATES.slice(startIdx, endIdx + 1);
+      let slicedPrices = data.prices.slice(startIdx, endIdx + 1);
+      let slicedVolumes = data.volumes.slice(startIdx, endIdx + 1);
+      
+      const baseRefPrice = slicedPrices[0];
+      const baselineData = new Array(slicedDates.length).fill(baseRefPrice);
+
+      let channelUpper = [];
+      let channelLower = [];
+      let channelMid = [];
+
+      const isPredictMode = (currentRangeMode === "PREDICT");
+      document.getElementById('predict-indicator-badge').style.display = isPredictMode ? 'inline-flex' : 'none';
+
+      if (isPredictMode) {
+        startIdx = Math.max(0, totalLen - 75);
+        slicedDates = ALL_TRADING_DATES.slice(startIdx);
+        slicedPrices = data.prices.slice(startIdx);
+        slicedVolumes = data.volumes.slice(startIdx);
+
+        const futureQuarters = ["2026/12", "2027/Q1", "2027/Q2", "2027/Q3", "2027/Q4"];
+        const futureCount = futureQuarters.length;
+
+        futureQuarters.forEach(q => {
+          slicedDates.push(q);
+          slicedPrices.push(null);
+          slicedVolumes.push(null);
+        });
+
+        baselineData.length = 0;
+        slicedDates.forEach(() => baselineData.push(baseRefPrice));
+
+        const lastP = slicedPrices[slicedPrices.length - futureCount - 1];
+        const targetHigh = data.targetHigh;
+        const targetMid = data.targetMid;
+        const targetLow = data.targetLow;
+
+        for (let i = 0; i < slicedDates.length; i++) {
+          if (i < slicedDates.length - futureCount - 1) {
+            channelUpper.push(null);
+            channelLower.push(null);
+            channelMid.push(null);
+          } else if (i === slicedDates.length - futureCount - 1) {
+            channelUpper.push(lastP);
+            channelLower.push(lastP);
+            channelMid.push(lastP);
+          } else {
+            const progress = (i - (slicedDates.length - futureCount - 1)) / futureCount;
+            const easeProgress = Math.sin((progress * Math.PI) / 2);
+
+            channelUpper.push(parseFloat((lastP + (targetHigh - lastP) * easeProgress).toFixed(2)));
+            channelMid.push(parseFloat((lastP + (targetMid - lastP) * easeProgress).toFixed(2)));
+            channelLower.push(parseFloat((lastP + (targetLow - lastP) * easeProgress).toFixed(2)));
+          }
+        }
+        document.getElementById('current-range-display').innerText = `顯示區間：歷史實績 + 2027 專業法人目標通道`;
+      }
+
+      const allValidPrices = [
+        ...slicedPrices.filter(p => p !== null),
+        ...(isPredictMode ? channelUpper.filter(p => p !== null) : []),
+        ...(isPredictMode ? channelLower.filter(p => p !== null) : [])
+      ];
+      const minPrice = Math.min(...allValidPrices);
+      const maxPrice = Math.max(...allValidPrices);
+      const pricePadding = (maxPrice - minPrice) * 0.12 || 2;
+
+      const datasets = [
+        {
+          type: 'line',
+          label: '真實走勢',
+          data: slicedPrices,
+          borderColor: '#1d4ed8',
+          backgroundColor: 'transparent',
+          borderWidth: 2.2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#1d4ed8',
+          tension: 0.1,
+          yAxisID: 'y'
+        },
+        {
+          type: 'line',
+          label: `平盤基準 (${baseRefPrice}元)`,
+          data: baselineData,
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          pointRadius: 0,
+          borderDash: [2, 2],
+          yAxisID: 'y'
+        },
+        {
+          type: 'bar',
+          label: '成交量 (張)',
+          data: slicedVolumes,
+          backgroundColor: '#ef4444',
+          borderRadius: 1,
+          barThickness: 'flex',
+          maxBarThickness: 4,
+          yAxisID: 'yVolume'
+        }
+      ];
+
+      if (isPredictMode) {
+        datasets.push(
+          {
+            type: 'line',
+            label: '預估下緣支撐',
+            data: channelLower,
+            borderColor: 'rgba(99, 102, 241, 0.25)',
+            borderWidth: 1,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.3,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: '2027預估通道區間',
+            data: channelUpper,
+            borderColor: 'rgba(99, 102, 241, 0.4)',
+            backgroundColor: 'rgba(99, 102, 241, 0.12)',
+            borderWidth: 1,
+            pointRadius: 0,
+            fill: '-1',
+            tension: 0.3,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: '2027法人目標中位價',
+            data: channelMid,
+            borderColor: '#6366f1',
+            borderWidth: 2,
+            borderDash: [5, 4],
+            pointRadius: function(context) {
+              return context.dataIndex === slicedDates.length - 1 ? 5 : 0;
+            },
+            pointBackgroundColor: '#6366f1',
+            tension: 0.3,
+            yAxisID: 'y'
+          }
+        );
+      }
+
+      const ctx = document.getElementById('stockTrendChart').getContext('2d');
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      chartInstance = new Chart(ctx, {
+        data: {
+          labels: slicedDates,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.92)',
+              titleFont: { size: 12, weight: 'bold' },
+              bodyFont: { size: 11 },
+              padding: 9,
+              cornerRadius: 8,
+              callbacks: {
+                label: function(ctx) {
+                  if (ctx.dataset.yAxisID === 'yVolume') {
+                    return ctx.parsed.y ? `成交量: ${ctx.parsed.y.toLocaleString()} 張` : '';
+                  }
+                  if (ctx.dataset.label.includes('通道區間')) {
+                    return `通道上緣 (樂觀): ${ctx.parsed.y} 元`;
+                  }
+                  if (ctx.dataset.label.includes('下緣支撐')) {
+                    return `通道下緣 (保守): ${ctx.parsed.y} 元`;
+                  }
+                  if (ctx.dataset.label.includes('中位價')) {
+                    return `目標中位價: ${ctx.parsed.y} 元`;
+                  }
+                  return ctx.parsed.y ? `價格: ${ctx.parsed.y.toFixed(2)} 元` : '';
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                font: { size: 11, family: 'sans-serif' },
+                color: '#64748b',
+                maxTicksLimit: 7,
+                maxRotation: 0
+              }
+            },
+            y: {
+              position: 'right',
+              min: parseFloat((minPrice - pricePadding).toFixed(1)),
+              max: parseFloat((maxPrice + pricePadding).toFixed(1)),
+              grid: {
+                color: '#f8fafc',
+                drawBorder: false
+              },
+              ticks: {
+                font: { size: 11, family: 'sans-serif' },
+                color: '#475569',
+                callback: function(v) { return v.toFixed(1); }
+              }
+            },
+            yVolume: {
+              position: 'left',
+              display: false,
+              min: 0,
+              max: Math.max(...slicedVolumes.filter(v => v !== null)) * 4.2
+            }
+          }
+        }
+      });
+    }
+
+    function renderCompanyProfile(code) {
+      const data = COMPANY_PROFILES[code] || COMPANY_PROFILES["1216"];
+
+      document.getElementById('spotlight-title').innerText = data.name;
+      document.getElementById('spotlight-category').innerText = data.category;
+      document.getElementById('spotlight-summary').innerText = data.summary;
+
+      document.getElementById('comp-upstream-content').innerHTML = data.upstream.map(item => `
+        <div class="bg-slate-900/80 p-2 rounded-lg border border-amber-500/20 shadow-2xs">
+          <div class="font-bold text-amber-300 text-xs">${item.name}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">${item.role}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('comp-transport-up-content').innerHTML = data.transportUp.map(item => `
+        <div class="bg-slate-900/80 p-2 rounded-lg border border-sky-500/20 shadow-2xs">
+          <div class="font-bold text-sky-300 text-xs flex items-center gap-1">
+            <i data-lucide="anchor" class="w-3 h-3 text-sky-400"></i> ${item.name}
+          </div>
+          <div class="text-[11px] text-slate-400 mt-0.5">${item.role}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('comp-core-content').innerHTML = data.core.map(item => `
+        <div class="bg-blue-950/60 p-2 rounded-lg border border-blue-500/40 shadow-2xs">
+          <div class="font-bold text-blue-300 text-xs">${item.name}</div>
+          <div class="text-[11px] text-slate-300 mt-0.5">${item.role}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('comp-transport-down-content').innerHTML = data.transportDown.map(item => `
+        <div class="bg-slate-900/80 p-2 rounded-lg border border-indigo-500/20 shadow-2xs">
+          <div class="font-bold text-indigo-300 text-xs flex items-center gap-1">
+            <i data-lucide="navigation" class="w-3 h-3 text-indigo-400"></i> ${item.name}
+          </div>
+          <div class="text-[11px] text-slate-400 mt-0.5">${item.role}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('comp-downstream-content').innerHTML = data.downstream.map(item => `
+        <div class="bg-slate-900/80 p-2 rounded-lg border border-rose-500/20 shadow-2xs">
+          <div class="font-bold text-rose-300 text-xs">${item.name}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">${item.role}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('comp-transport-analysis').innerHTML = data.transportAnalysis.map(a => `
+        <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-700/80">
+          <div class="font-bold text-amber-300 mb-1">${a.title}</div>
+          <p class="text-slate-300">${a.desc}</p>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function renderFinancialTable(dataList) {
+      const tbody = document.getElementById('financial-table-body');
+      tbody.innerHTML = dataList.map(item => `
+        <tr class="hover:bg-slate-50/80 transition-colors">
+          <td class="py-3 px-3.5 whitespace-nowrap">
+            <span class="inline-block bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-mono text-[11px] mr-1.5">${item.code}</span>
+            <button onclick="changeCompany('${item.code}')" class="font-bold text-slate-900 hover:text-blue-600 underline">
+              ${item.name}
+            </button>
+          </td>
+          <td class="py-3 px-3 font-semibold text-slate-900">${item.price} 元</td>
+          <td class="py-3 px-3 text-slate-600">${item.pe} 倍</td>
+          <td class="py-3 px-3 font-bold text-blue-600">${item.yield}</td>
+          <td class="py-3 px-3 text-slate-600">${item.margin}</td>
+          <td class="py-3 px-3 text-slate-600">${item.roe}</td>
+          <td class="py-3 px-3 text-slate-600">${item.payout}</td>
+          <td class="py-3 px-3 text-slate-500 max-w-xs text-[11px]">${item.defense}</td>
+          <td class="py-3 px-3 text-right whitespace-nowrap">
+            <a href="https://tw.stock.yahoo.com/quote/${item.code}.TW" target="_blank" rel="noopener noreferrer" 
+               class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium text-xs hover:underline">
+              走勢
+              <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function sortFinancials(type) {
+      let sorted = [...FINANCIAL_DATA];
+      if (type === 'yield') {
+        sorted.sort((a, b) => parseFloat(b.yield) - parseFloat(a.yield));
+      } else if (type === 'pe') {
+        sorted.sort((a, b) => parseFloat(a.pe) - parseFloat(b.pe));
+      } else if (type === 'margin') {
+        sorted.sort((a, b) => parseFloat(b.margin) - parseFloat(a.margin));
+      }
+      renderFinancialTable(sorted);
+    }
+
+    function renderNews(newsList) {
+      const container = document.getElementById('news-container');
+      container.innerHTML = newsList.map(news => `
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 flex flex-col justify-between hover:border-blue-300 hover:shadow-xs transition-all">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${news.tagClass}">${news.tag}</span>
+              <span class="text-[11px] text-slate-400">${news.date}</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-xs sm:text-sm leading-snug mb-2 hover:text-blue-700">
+              <a href="${news.link}" target="_blank" rel="noopener noreferrer">${news.title}</a>
+            </h4>
+            <p class="text-xs text-slate-600 leading-relaxed line-clamp-3 mb-3">${news.summary}</p>
+          </div>
+          <div class="pt-3 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-400">
+            <span>來源：${news.source}</span>
+            <a href="${news.link}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline flex items-center gap-0.5">
+              Yahoo股市 <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function handleSearch(keyword) {
+      const dropdown = document.getElementById('search-dropdown');
+      const clearBtn = document.getElementById('clear-search-btn');
+      const q = keyword.trim().toLowerCase();
+
+      if (!q) {
+        dropdown.classList.add('hidden');
+        clearBtn.classList.add('hidden');
+        return;
+      }
+      clearBtn.classList.remove('hidden');
+
+      const matches = FINANCIAL_DATA.filter(item => 
+        item.code.toLowerCase().includes(q) || item.name.toLowerCase().includes(q)
+      );
+
+      if (matches.length === 0) {
+        dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">查無符合股票</div>`;
+        dropdown.classList.remove('hidden');
+        return;
+      }
+
+      dropdown.innerHTML = matches.map(item => `
+        <div onclick="selectSearchResult('${item.code}')" class="p-2.5 px-3 hover:bg-slate-100 cursor-pointer flex items-center justify-between text-xs border-b border-slate-50 last:border-b-0">
+          <div class="flex items-center gap-2">
+            <span class="bg-blue-100 text-blue-800 font-mono px-1.5 py-0.5 rounded font-bold">${item.code}</span>
+            <span class="font-bold text-slate-800">${item.name}</span>
+            <span class="text-slate-400 text-[11px] hidden sm:inline">殖利率 ${item.yield}</span>
+          </div>
+          <span class="text-blue-600 font-medium">查看走勢與預測 ➔</span>
+        </div>
+      `).join('');
+      dropdown.classList.remove('hidden');
+    }
+
+    function selectSearchResult(code) {
+      changeCompany(code);
+      clearSearch();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('global-search-input');
+      if (input) input.value = '';
+      document.getElementById('search-dropdown').classList.add('hidden');
+      document.getElementById('clear-search-btn').classList.add('hidden');
+    }
+
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('global-search-input');
+      const dropdown = document.getElementById('search-dropdown');
+      if (container && dropdown && !container.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    function switchIndustry(val) {
+      if (val !== 'food') {
+        alert("目前正專注完善「食品產業鏈」，更多產業即將加入！");
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>
