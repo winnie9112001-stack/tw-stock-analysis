@@ -5869,17 +5869,65 @@
       }
     };
 
-    const FINANCIAL_DATA = [
-      { code: "1216", name: "統一", price: "80.5", pe: "18.2", yield: "4.1%", margin: "33.8%", roe: "14.2%", payout: "82%", defense: "超商通路現金流極為龐大，民生品牌抗通膨" },
-      { code: "1210", name: "大成", price: "55.8", pe: "12.8", yield: "4.8%", margin: "14.6%", roe: "11.5%", payout: "65%", defense: "白肉雞一貫化完整，新廠產能開出挹注毛利" },
-      { code: "1215", name: "卜蜂", price: "98.2", pe: "13.6", yield: "5.2%", margin: "16.1%", roe: "18.3%", payout: "71%", defense: "超商即食雞胸肉大宗供應商，配息穩定高殖利率" },
-      { code: "1232", name: "大統益", price: "148.5", pe: "19.5", yield: "4.5%", margin: "12.8%", roe: "21.6%", payout: "88%", defense: "台灣沙拉油市佔第一，台中港專用碼頭成本優勢" },
-      { code: "2912", name: "統一超", price: "276.0", pe: "26.5", yield: "3.4%", margin: "34.5%", roe: "29.8%", payout: "86%", defense: "全台超過7000店通路霸主，CITY CAFE高毛利" },
-      { code: "1229", name: "聯華", price: "64.2", pe: "16.0", yield: "4.4%", margin: "19.2%", roe: "10.4%", payout: "75%", defense: "水手牌麵粉內需強勁，轉投資半導體化學氣體收益" },
-      { code: "1234", name: "黑松", price: "39.5", pe: "15.1", yield: "4.7%", margin: "28.3%", roe: "9.2%", payout: "78%", defense: "微風廣場大筆土地資產，金門高粱台灣經銷金雞母" },
-      { code: "1225", name: "福懋油", price: "72.0", pe: "22.0", yield: "3.2%", margin: "9.5%", roe: "8.7%", payout: "60%", defense: "食用油脂與麵粉主力，中部大宗穀物轉運樞紐" },
-      { code: "5903", name: "全家", price: "192.5", pe: "24.2", yield: "3.6%", margin: "35.8%", roe: "22.1%", payout: "80%", defense: "4200+店第二大超商，霜淇淋與甜點爆品行銷強" }
-    ];
+    
+  const ALL_FOOD_STOCKS = [
+  // 1. 大宗油脂與麵粉 (上游)
+  { code: "1232", name: "大統益", category: "upstream", catName: "上游油脂", price: 148.5, pe: 19.5, yield: "4.5%", margin: "12.8%", roe: "21.6%", payout: "88%", ocfRatio: "115%", capexRatio: "12%", usdSensitivity: "高敏感 (黃豆美金計價)", lagQuarter: "約 1~2 季 (庫存 60 天)", ocfState: "現金流充裕 (配息極穩)", tag: "大豆壓榨龍頭 · 市佔逾4成", defense: "台灣沙拉油市佔第一，台中港專用碼頭成本優勢" },
+  { code: "1225", name: "福懋油", category: "upstream", catName: "上游油脂", price: 72.0, pe: 22.0, yield: "3.2%", margin: "9.5%", roe: "8.7%", payout: "60%", ocfRatio: "98%", capexRatio: "15%", usdSensitivity: "高敏感 (油脂大豆進口)", lagQuarter: "約 1.5 季", ocfState: "營運現金流正常", tag: "食用油脂與麵粉主力 · 中部轉運樞紐", defense: "食用油脂與麵粉主力，中部大宗穀物轉運樞紐" },
+  { code: "1229", name: "聯華", category: "upstream", catName: "上游麵粉/氣體", price: 64.2, pe: 16.0, yield: "4.4%", margin: "19.2%", roe: "10.4%", payout: "75%", ocfRatio: "125%", capexRatio: "22%", usdSensitivity: "中等敏感 (小麥美元+半導體氣體沖銷)", lagQuarter: "約 1 季", ocfState: "業外與本業金流雙強", tag: "水手牌麵粉 · 台積電氣體主供", defense: "水手牌麵粉內需強勁，轉投資半導體化學氣體收益" },
+  { code: "1219", name: "福壽", category: "upstream", catName: "上游飼料油脂", price: 17.8, pe: 14.5, yield: "4.2%", margin: "10.2%", roe: "7.8%", payout: "68%", ocfRatio: "105%", capexRatio: "14%", usdSensitivity: "高敏感 (穀物大宗採購)", lagQuarter: "約 1 季", ocfState: "穩健平穩", tag: "老牌飼料油脂 · 寵物食品佈局", defense: "百年老牌飼料大廠，轉型寵物處方糧獲利優化" },
+  { code: "1220", name: "台榮", category: "upstream", catName: "上游玉米澱粉", price: 14.2, pe: 13.8, yield: "4.6%", margin: "11.5%", roe: "8.1%", payout: "70%", ocfRatio: "110%", capexRatio: "10%", usdSensitivity: "高敏感 (進口玉米期貨)", lagQuarter: "約 1 季", ocfState: "資本支出低 (現金穩)", tag: "全台玉米澱粉與果糖先驅", defense: "內銷玉米澱粉與高果糖漿大廠，餐飲剛需" },
+
+  // 2. 農畜肉品與飼料 (中游)
+  { code: "1210", name: "大成", category: "midstream", catName: "中游肉品", price: 55.8, pe: 12.8, yield: "4.8%", margin: "14.6%", roe: "11.5%", payout: "65%", ocfRatio: "135%", capexRatio: "38%", usdSensitivity: "高敏感 (原物料美元成本+畜禽內銷)", lagQuarter: "約 1~2 季 (生長育成週期)", ocfState: "新廠擴建資本支出高峰後金流回升", tag: "白肉雞一貫化龍頭 · 馬稠後新廠", defense: "白肉雞一貫化完整，新廠產能開出挹注毛利" },
+  { code: "1215", name: "卜蜂", category: "midstream", catName: "中游肉品", price: 98.2, pe: 13.6, yield: "5.2%", margin: "16.1%", roe: "18.3%", payout: "71%", ocfRatio: "142%", capexRatio: "25%", usdSensitivity: "中高敏感 (泰國母集團集中避險)", lagQuarter: "約 1 季", ocfState: "自由現金流極度充裕", tag: "肉品獲利長跑王 · 超商鮮食主力", defense: "超商即食雞胸肉大宗供應商，配息穩定高殖利率" },
+  { code: "1240", name: "茂生農經", category: "midstream", catName: "中游畜牧", price: 46.5, pe: 12.2, yield: "5.5%", margin: "13.2%", roe: "13.5%", payout: "68%", ocfRatio: "118%", capexRatio: "18%", usdSensitivity: "中高敏感 (飼料原糧進口)", lagQuarter: "約 1 季", ocfState: "現金流維持正向", tag: "蛋雞一條龍 · 富翁牌飼料", defense: "禽畜飼料與自營洗選蛋牧場，農委會專案輔導" },
+  { code: "1235", name: "興泰", category: "midstream", catName: "中游水產飼料", price: 34.0, pe: 15.0, yield: "3.8%", margin: "12.0%", roe: "6.5%", payout: "60%", ocfRatio: "95%", capexRatio: "8%", usdSensitivity: "中敏感 (魚粉黃豆進口)", lagQuarter: "約 1 季", ocfState: "資產持股投資比重高", tag: "老牌水產飼料與業外轉投資", defense: "南部水產養殖飼料供應商，財務體質平穩" },
+
+  // 3. 綜合食品與品牌乳品 (中下游品牌)
+  { code: "1216", name: "統一", category: "brand", catName: "龍頭全整合", price: 80.5, pe: 18.2, yield: "4.1%", margin: "33.8%", roe: "14.2%", payout: "82%", ocfRatio: "148%", capexRatio: "32%", usdSensitivity: "雙向平衡自然避險 (進口原物料美金+海外營收換算)", lagQuarter: "約 1~2 季 (終端價格向上黏性)", ocfState: "全台食品業最強現金產生機器", tag: "食品日用霸主 · 7-11最強靠山", defense: "超商通路現金流極為龐大，民生品牌抗通膨" },
+  { code: "1201", name: "味全", category: "brand", catName: "品牌乳品飲料", price: 18.9, pe: 17.5, yield: "4.0%", margin: "29.2%", roe: "6.8%", payout: "72%", ocfRatio: "112%", capexRatio: "15%", usdSensitivity: "中敏感 (進口生乳與包材)", lagQuarter: "約 1 季", ocfState: "穩步修復中", tag: "林鳳營鮮乳 · 大陸冷藏飲料擴張", defense: "冷藏乳品與果汁市佔前段班，兩岸布局" },
+  { code: "1203", name: "味王", category: "brand", catName: "調味醬料速食", price: 34.5, pe: 16.8, yield: "4.3%", margin: "27.5%", roe: "8.5%", payout: "70%", ocfRatio: "120%", capexRatio: "12%", usdSensitivity: "低敏感 (原料自給與在地採購)", lagQuarter: "約 1 季", ocfState: "老牌現金流穩定", tag: "王子麵 · 味精醬油老字號", defense: "王子麵滷味攤剛需霸主，台北精華地段資產雄厚" },
+  { code: "1217", name: "愛之味", category: "brand", catName: "罐頭健康飲料", price: 11.2, pe: 15.6, yield: "4.5%", margin: "31.2%", roe: "6.2%", payout: "75%", ocfRatio: "108%", capexRatio: "16%", usdSensitivity: "中敏感 (燕麥大豆進口)", lagQuarter: "約 1 季", ocfState: "燕麥奶產銷平衡", tag: "純濃燕麥 · 傳統醬菜罐頭龍頭", defense: "健康穀物即飲品領導品牌，產品毛利率優" },
+  { code: "1218", name: "泰山", category: "brand", catName: "油品點心飲料", price: 21.3, pe: 16.2, yield: "4.2%", margin: "16.8%", roe: "7.1%", payout: "65%", ocfRatio: "102%", capexRatio: "14%", usdSensitivity: "中高敏感 (大豆油脂進口)", lagQuarter: "約 1 季", ocfState: "經營權穩定後金流回歸", tag: "仙草蜜 · 八寶粥國民甜點", defense: "包裝甜品與冷藏茶飲長青，處分全家後強化本業" },
+  { code: "1227", name: "佳格", category: "brand", catName: "營養保健乳品", price: 36.8, pe: 15.8, yield: "4.9%", margin: "28.5%", roe: "10.2%", payout: "78%", ocfRatio: "128%", capexRatio: "15%", usdSensitivity: "中高敏感 (澳洲燕麥奶粉進口)", lagQuarter: "約 1 季", ocfState: "長年高配息現金牛", tag: "桂格燕麥 · 得意的一天油品", defense: "台灣營養穀物與保健飲品龍頭，高齡化受惠" },
+  { code: "1231", name: "聯華食", category: "brand", catName: "休閒零食鮮食", price: 104.5, pe: 18.5, yield: "3.9%", margin: "21.5%", roe: "15.8%", payout: "72%", ocfRatio: "130%", capexRatio: "35%", usdSensitivity: "中敏感 (馬鈴薯玉米粉原料)", lagQuarter: "約 1 季", ocfState: "觀音新廠投入後產能全開", tag: "可樂果 · 萬歲牌 · 7-11鮮食主供", defense: "休閒零食與超商御飯糰三明治主力代工" },
+  { code: "1234", name: "黑松", category: "brand", catName: "飲料酒類代銷", price: 39.5, pe: 15.1, yield: "4.7%", margin: "28.3%", roe: "9.2%", payout: "78%", ocfRatio: "135%", capexRatio: "10%", usdSensitivity: "低敏感 (原料在地+金酒代銷)", lagQuarter: "約 1 季", ocfState: "零負債級別超充沛現金", tag: "黑松沙士 · 金門高粱總經銷", defense: "微風廣場大筆土地資產，金門高粱台灣經銷金雞母" },
+  { code: "1236", name: "宏亞", category: "brand", catName: "糖果巧克力", price: 23.8, pe: 14.8, yield: "4.4%", margin: "26.4%", roe: "7.9%", payout: "65%", ocfRatio: "105%", capexRatio: "12%", usdSensitivity: "高敏感 (西非可可豆美元報價)", lagQuarter: "約 1.5 季", ocfState: "資本結構輕盈", tag: "77乳加 · 巧菲斯童年回憶", defense: "台灣巧克力零食代名詞，觀光工廠文化財" },
+  { code: "4205", name: "中華食", category: "brand", catName: "盒裝豆腐水產", price: 106.0, pe: 21.0, yield: "3.8%", margin: "38.2%", roe: "19.5%", payout: "85%", ocfRatio: "140%", capexRatio: "15%", usdSensitivity: "低至中 (高毛利可完全轉嫁)", lagQuarter: "約 1 季", ocfState: "幾乎零長短期借款的存股聖品", tag: "中華豆腐 · 中華豆花無敵市佔", defense: "盒裝豆腐獨佔全台近7成市場，超高毛利且定價權強" },
+  { code: "1702", name: "南僑", category: "brand", catName: "烘焙油脂餐飲", price: 48.2, pe: 13.9, yield: "5.0%", margin: "32.0%", roe: "11.2%", payout: "70%", ocfRatio: "122%", capexRatio: "20%", usdSensitivity: "海外營收多元沖銷 (泰國/大陸營收)", lagQuarter: "約 1 季", ocfState: "海外獲利持續匯回", tag: "烘焙油脂霸主 · 點水樓 · 泰國急凍熟麵", defense: "兩岸頂級烘焙油脂市佔第一，泰國新廠外銷歐美" },
+  { code: "1256", name: "鮮活果汁-KY", category: "brand", catName: "茶飲濃縮果汁", price: 145.0, pe: 16.5, yield: "4.8%", margin: "31.5%", roe: "12.8%", payout: "72%", ocfRatio: "125%", capexRatio: "18%", usdSensitivity: "人民幣與進口水果匯率聯動", lagQuarter: "約 1 季", ocfState: "大陸手搖茶飲現金回流快", tag: "大陸新茶飲果粒濃漿王者", defense: "蜜雪冰城、喜茶等供應鏈核心，研發客製化壁壘" },
+
+  // 4. 下游通路超商與外食烘焙
+  { code: "2912", name: "統一超", category: "retail", catName: "超商通路", price: 276.0, pe: 26.5, yield: "3.4%", margin: "34.5%", roe: "29.8%", payout: "86%", ocfRatio: "165%", capexRatio: "42%", usdSensitivity: "低敏感 (下游零售直接收取台幣現金)", lagQuarter: "無滯後 (每日現金銷售，通膨立馬轉嫁)", ocfState: "每日數億現金流入，超充沛金牛", tag: "全台7000+門市霸權 · 咖啡鮮食暴利", defense: "全台超過7000店通路霸主，CITY CAFE高毛利" },
+  { code: "5903", name: "全家", category: "retail", catName: "超商通路", price: 192.5, pe: 24.2, yield: "3.6%", margin: "35.8%", roe: "22.1%", payout: "80%", ocfRatio: "155%", capexRatio: "38%", usdSensitivity: "低敏感 (零售台幣現金流)", lagQuarter: "無滯後 (即時終端定價)", ocfState: "會員生態圈貢獻高黏著金流", tag: "4200+店第二大超商 · 霜淇淋甜點爆款", defense: "4200+店第二大超商，霜淇淋與甜點爆品行銷強" },
+  { code: "1259", name: "安心", category: "retail", catName: "外食連鎖", price: 71.5, pe: 18.2, yield: "4.3%", margin: "27.8%", roe: "8.9%", payout: "78%", ocfRatio: "120%", capexRatio: "22%", usdSensitivity: "中敏感 (牛肉/薯條美金進口)", lagQuarter: "約 1 季", ocfState: "直營門市無應收帳款風險", tag: "摩斯漢堡 (MOS BURGER) 台灣母公司", defense: "日系精緻米漢堡品牌忠誠度高，門市據點穩健擴充" },
+  { code: "1264", name: "德麥", category: "retail", catName: "烘焙原料通路", price: 295.0, pe: 16.8, yield: "4.6%", margin: "35.2%", roe: "23.5%", payout: "82%", ocfRatio: "135%", capexRatio: "15%", usdSensitivity: "中高敏感 (歐洲乳酪奶油進口歐元/美元)", lagQuarter: "約 1~2 季", ocfState: "輕資產高毛利商業模式", tag: "全台最大烘焙原料與乳品代理", defense: "代理法國諾曼第乳源與頂級酵母，綁定全台萬家烘焙店" },
+  { code: "1268", name: "漢來美食", category: "retail", catName: "外食餐飲", price: 142.0, pe: 17.5, yield: "4.8%", margin: "44.5%", roe: "16.8%", payout: "85%", ocfRatio: "138%", capexRatio: "28%", usdSensitivity: "中等 (海鮮高檔肉品進口成本)", lagQuarter: "約 1 季", ocfState: "台北漢來大飯店據點挹注大額流水", tag: "海港自助餐 · 宴會廳頂級品牌", defense: "五星級飯店餐飲品牌化，大型宴會與自助餐吸金力強" },
+
+  // 5. 生技保健與特力食品
+  { code: "1737", name: "臺鹽", category: "special", catName: "鹽業生技", price: 33.2, pe: 17.0, yield: "4.5%", margin: "38.5%", roe: "9.2%", payout: "80%", ocfRatio: "125%", capexRatio: "12%", usdSensitivity: "低敏感 (台灣海水在地提煉)", lagQuarter: "無明顯滯後", ocfState: "國營轉民營體質極穩健", tag: "食用鹽獨家供應 · 鹼性離子水第一", defense: "全台唯一食用精鹽法定保障，包裝水高毛利金牛" },
+  { code: "7780", name: "大研生醫", category: "special", catName: "保健品", price: 135.0, pe: 22.5, yield: "3.5%", margin: "64.5%", roe: "28.5%", payout: "75%", ocfRatio: "145%", capexRatio: "10%", usdSensitivity: "中敏感 (德國魚油原料歐元/美金)", lagQuarter: "約 1 季", ocfState: "高毛利電商模式金流強勁", tag: "德國頂級魚油 · 葉黃素電商冠軍", defense: "毛利率突破60%，專利配方與數位行銷極具爆發力" },
+  { code: "7791", name: "皇家可口", category: "special", catName: "冰品烘焙", price: 68.0, pe: 15.5, yield: "4.2%", margin: "36.0%", roe: "18.2%", payout: "70%", ocfRatio: "130%", capexRatio: "25%", usdSensitivity: "中敏感 (進口奶粉與油脂原料)", lagQuarter: "約 1 季", ocfState: "夏日旺季現金回籠極快", tag: "杜老爺冰淇淋 · 卡比索 · 南僑集團旗下", defense: "台灣冰品雙霸天之一，超商及量販冰櫃長期壟斷" },
+  { code: "7743", name: "金利食安", category: "special", catName: "生鮮果汁", price: 58.5, pe: 16.0, yield: "4.0%", margin: "42.0%", roe: "15.0%", payout: "68%", ocfRatio: "120%", capexRatio: "18%", usdSensitivity: "低敏感 (台灣在地水果原料)", lagQuarter: "約 1 季", ocfState: "HPP超高壓技術壁壘", tag: "純在冷壓果汁 · 好市多爆品", defense: "亞洲最大HPP低溫超高壓滅菌廠，星巴克與Costco核心供貨" }
+];
+
+  // 轉換為財務表格相容格式
+  const FINANCIAL_DATA = ALL_FOOD_STOCKS.map(s => ({
+    code: s.code,
+    name: s.name,
+    category: s.category,
+    catName: s.catName,
+    price: s.price.toFixed(1),
+    pe: s.pe.toFixed(1),
+    yield: s.yield,
+    margin: s.margin,
+    roe: s.roe,
+    payout: s.payout,
+    ocfRatio: s.ocfRatio,
+    defense: s.defense
+  }));
+
 
     const NEWS_DATA = [
       {
@@ -6238,6 +6286,104 @@
           <div><strong class="text-slate-800">${comp.subMetrics.m3Title}：</strong>${comp.subMetrics.m3Desc}</div>
         `;
       }
+    }
+
+    
+    // 依次族群篩選股票選單
+    function filterCategory(cat) {
+      populateStockOptions(cat);
+      // 如果當前選中的股票不在該類別中，自動切換至該類別的第一檔
+      const currentCode = currentStockCode;
+      const matched = ALL_FOOD_STOCKS.filter(s => cat === 'all' || s.category === cat);
+      if (matched.length > 0 && !matched.some(s => s.code === currentCode)) {
+        changeCompany(matched[0].code);
+      }
+    }
+
+    // 動態填入全台食品股下拉選單
+    function populateStockOptions(selectedCat = 'all') {
+      const select = document.getElementById('stock-chart-select');
+      if (!select) return;
+      const currentVal = select.value || currentStockCode;
+      select.innerHTML = '';
+      
+      const filtered = ALL_FOOD_STOCKS.filter(s => selectedCat === 'all' || s.category === selectedCat);
+      filtered.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.code;
+        opt.textContent = `${s.code} ${s.name} (${s.catName})`;
+        if (s.code === currentVal) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    // 更新四大全新深度分析維度卡片
+    function updateDimensions(stockCode) {
+      const item = ALL_FOOD_STOCKS.find(s => s.code === stockCode) || ALL_FOOD_STOCKS[0];
+      
+      const titleName = document.getElementById('dimension-stock-name');
+      if (titleName) titleName.textContent = `${item.name} (${item.code})`;
+
+      // 1. 原料剪刀差
+      const lagTime = document.getElementById('dim-lag-time');
+      const lagDesc = document.getElementById('dim-lag-desc');
+      const lagBadge = document.getElementById('dim-lag-badge');
+      const lagStatus = document.getElementById('dim-lag-status');
+      if (lagTime) lagTime.textContent = item.lagQuarter;
+      if (lagDesc) lagDesc.textContent = `${item.name} 核心原料進口與庫存週期約 ${item.lagQuarter}。在 CBOT 穀物或原料波動下，其財報毛利率認列約具備滯後緩衝，目前屬於穩健傳導格局。`;
+      if (lagBadge) lagBadge.textContent = item.category === 'upstream' ? '原料敏感傳導' : '終端價格黏性紅利';
+      if (lagStatus) lagStatus.textContent = item.category === 'retail' ? '無時滯(即時銷貨)' : '時滯發酵中';
+
+      // 2. 匯率敏感度
+      const fxLevel = document.getElementById('dim-fx-level');
+      const fxDesc = document.getElementById('dim-fx-desc');
+      const fxBadge = document.getElementById('dim-fx-badge');
+      const fxImpact = document.getElementById('dim-fx-impact');
+      if (fxLevel) fxLevel.textContent = item.usdSensitivity;
+      if (fxDesc) fxDesc.textContent = `採購多以美金計價。台幣每升值 1 元，進口台幣換算成本約減輕 3%~3.5%；${item.category === 'retail' ? '下游零售以台幣內銷為主，直接受惠購買力提升。' : '具備海外營收或避險部位可有效對沖外匯波動。'}`;
+      if (fxBadge) fxBadge.textContent = item.usdSensitivity.includes('低') ? '外匯低敏感' : '美元高度聯動';
+      if (fxImpact) fxImpact.textContent = item.category === 'retail' || item.code === '1216' ? '升值受惠股' : '利差平衡中';
+
+      // 3. 次族群專屬 KPI
+      const kpiSubcat = document.getElementById('dim-kpi-subcat');
+      const kpiTitle = document.getElementById('dim-kpi-title');
+      const kpiDesc = document.getElementById('dim-kpi-desc');
+      const kpiCatname = document.getElementById('dim-kpi-catname');
+      const kpiHealth = document.getElementById('dim-kpi-health');
+      if (kpiSubcat) kpiSubcat.textContent = item.catName;
+      if (kpiCatname) kpiCatname.textContent = item.catName;
+      
+      if (item.category === 'upstream') {
+        if (kpiTitle) kpiTitle.textContent = '芝加哥壓榨利差 (Crush) 與專用碼頭';
+        if (kpiDesc) kpiDesc.textContent = '關鍵在於大豆/小麥採購成本與國內豆粉、沙拉油售價之剪刀差。擁有專用吸糧泊位可省下巨額轉運成本與滯港費。';
+        if (kpiHealth) kpiHealth.textContent = '壓榨利差優';
+      } else if (item.category === 'midstream') {
+        if (kpiTitle) kpiTitle.textContent = '畜禽產地報價 vs. 飼料換肉率';
+        if (kpiDesc) kpiDesc.textContent = '核心監控全台毛豬與白肉雞拍賣價格。透過一貫化垂直整合與高換肉率配方，在疫情好轉與肉價高檔時迎來暴利。';
+        if (kpiHealth) kpiHealth.textContent = '肉價處高檔';
+      } else if (item.category === 'retail') {
+        if (kpiTitle) kpiTitle.textContent = '同店銷售 (SSSG) 與鮮食/自有品牌佔比';
+        if (kpiDesc) kpiDesc.textContent = '評估零售通路的命脈在於門市同店增長率與鮮食/現煮咖啡滲透率（毛利 >35%~50%），會員生態圈帶來源源不絕台幣現金。';
+        if (kpiHealth) kpiHealth.textContent = '高頻剛需金牛';
+      } else if (item.category === 'special') {
+        if (kpiTitle) kpiTitle.textContent = '高毛利率純度 (>40%+) 與專利認證';
+        if (kpiDesc) kpiDesc.textContent = '生技與特殊食品具備極高營業毛利率，關鍵在於專利配方、HPP滅菌技術壁壘與品牌回購黏著度。';
+        if (kpiHealth) kpiHealth.textContent = '超高毛利率';
+      } else {
+        if (kpiTitle) kpiTitle.textContent = '品牌溢價力與超商出海口佔有率';
+        if (kpiDesc) kpiDesc.textContent = '具備國民商品價格向下黏性（漲價後不跌）。當上游原物料價格回落時，終端商品毛利率大幅飆升。';
+        if (kpiHealth) kpiHealth.textContent = '定價權極強';
+      }
+
+      // 4. 現金流與配息
+      const cashOcf = document.getElementById('dim-cash-ocf');
+      const cashDesc = document.getElementById('dim-cash-desc');
+      const cashBadge = document.getElementById('dim-cash-badge');
+      const cashCapex = document.getElementById('dim-cash-capex');
+      if (cashOcf) cashOcf.textContent = item.ocfRatio;
+      if (cashBadge) cashBadge.textContent = parseInt(item.ocfRatio) > 110 ? '現金流入充沛' : '金流穩健';
+      if (cashCapex) cashCapex.textContent = `CapEx ${item.capexRatio} · 配息率 ${item.payout}`;
+      if (cashDesc) cashDesc.textContent = `${item.name} 營業活動現金流/淨利比為 ${item.ocfRatio}（大於 100% 代表獲利純度高、非應收帳款虛胖）。資本支出佔比 ${item.capexRatio}，配息率達 ${item.payout}，${item.ocfState}。`;
     }
 
     function changeCompany(code) {
