@@ -57,6 +57,22 @@
       letter-spacing: -0.5px;
       z-index: 5;
     }
+    /* 手機端專屬觸控與字體優化 */
+    @media (max-width: 640px) {
+      .yahoo-watermark {
+        font-size: 16px;
+        top: 8px;
+        left: 10px;
+      }
+      .mobile-scroll-hint::after {
+        content: "👉 可左右滑動查看完整資料";
+        display: block;
+        font-size: 10px;
+        color: #94a3b8;
+        margin-top: 4px;
+        text-align: right;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
