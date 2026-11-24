@@ -77,49 +77,52 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
-  <!-- 頂部導航列 -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-      <div class="flex items-center space-x-3 shrink-0">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
-          <i data-lucide="trending-up" class="w-6 h-6"></i>
+  <!-- 頂部導航列：在手機端自適應流式高度與滾動，防止遮擋「大成/統一」標題 -->
+  <header class="bg-white border-b border-slate-200 z-40 shadow-xs relative sm:sticky sm:top-0">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-0 sm:h-16 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 sm:gap-4">
+      
+      <!-- Logo + 標題 -->
+      <div class="flex items-center space-x-2.5 shrink-0">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+          <i data-lucide="trending-up" class="w-4 h-4 sm:w-6 sm:h-6"></i>
         </div>
         <div>
-          <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            台股產業價值鏈分析
-            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">全連動旗艦版</span>
+          <h1 class="text-sm sm:text-lg font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
+            台股產業分析
+            <span class="text-[10px] sm:text-xs bg-blue-100 text-blue-800 px-1.5 sm:px-2 py-0.5 rounded-full font-semibold">旗艦版</span>
           </h1>
-          <p class="text-[11px] text-slate-500 hidden sm:block">個股投資診斷 · 外國進口來源 · 食安氣候獲利三要素全連動 · Yahoo走勢</p>
+          <p class="text-[10px] text-slate-400 hidden md:block">日級高頻走勢 · 成交量直方圖 · 專業漸層預測通道 · 上下游透視</p>
         </div>
       </div>
 
-      <!-- 即時股票搜尋框 -->
-      <div class="flex-1 max-w-md relative">
+      <!-- 產業選單 + 官方連結 (手機端靠右) -->
+      <div class="flex items-center gap-1.5 shrink-0 order-2 sm:order-3">
+        <select id="industry-select" onchange="switchIndustry(this.value)" class="text-xs bg-slate-100 border border-slate-300 text-slate-800 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+          <option value="food" selected>🥣 食品產業</option>
+          <option value="semi" disabled>💻 半導體 (即將)</option>
+        </select>
+        <a href="https://tw.stock.yahoo.com/" target="_blank" rel="noopener noreferrer" class="hidden lg:flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors font-medium">
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          Yahoo股市
+        </a>
+      </div>
+
+      <!-- 即時股票搜尋框 (手機端獨佔一行或自適應) -->
+      <div class="w-full sm:flex-1 sm:max-w-md relative order-3 sm:order-2">
         <div class="relative">
           <input 
             type="text" 
             id="global-search-input" 
-            placeholder="搜尋代號或公司 (如: 1216、統一、卜蜂、大成...)" 
+            placeholder="搜尋代號或公司 (如: 1216、大成、卜蜂...)" 
             oninput="handleSearch(this.value)"
-            class="w-full bg-slate-100 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl pl-9 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-inner"
+            class="w-full bg-slate-100 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl pl-8 sm:pl-9 pr-8 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-inner"
           />
-          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-          <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+          <i data-lucide="search" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 absolute left-2.5 sm:left-3 top-2 sm:top-2.5"></i>
+          <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-2 sm:top-2.5 text-slate-400 hover:text-slate-600 text-xs">✕</button>
         </div>
-        <div id="search-dropdown" class="hidden absolute left-0 right-0 top-11 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-72 overflow-y-auto custom-scrollbar"></div>
+        <div id="search-dropdown" class="hidden absolute left-0 right-0 top-10 sm:top-11 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-72 overflow-y-auto custom-scrollbar"></div>
       </div>
 
-      <div class="flex items-center gap-2 shrink-0">
-        <select id="industry-select" onchange="switchIndustry(this.value)" class="text-xs sm:text-sm bg-slate-100 border border-slate-300 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-          <option value="food" selected>🥣 食品產業</option>
-          <option value="semi" disabled>💻 半導體 (即將擴充)</option>
-          <option value="ai" disabled>🤖 AI 伺服器 (即將擴充)</option>
-        </select>
-        <a href="https://tw.stock.yahoo.com/" target="_blank" rel="noopener noreferrer" class="hidden lg:flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors font-medium">
-          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-          Yahoo股市官網
-        </a>
-      </div>
     </div>
   </header>
 
