@@ -1,10 +1,12 @@
-name: Sync TWSE Stock & Industry Data
+name: Sync Realtime Stock & Yahoo K-Line Data
 
 on:
   schedule:
-    # 每個工作日台灣時間下午 15:30 (UTC 07:30) 自動執行抓取最新收盤與基本面
-    - cron: '30 7 * * 1-5'
-  workflow_dispatch: # 支援在 GitHub 介面上一鍵手動觸發
+    # 每個台股工作日開盤至收盤期間定時自動抓取最新市場行情
+    - cron: '*/30 1-6 * * 1-5'  # 台灣時間 09:00 ~ 14:00 (UTC 01:00 ~ 06:00) 每 30 分鐘更新
+    - cron: '40 6 * * 1-5'      # 台灣時間 14:40 (收盤定盤)
+    - cron: '30 7 * * 1-5'      # 台灣時間 15:30 (三大法人與盤後完整定價)
+  workflow_dispatch:           # 隨時手動一鍵觸發立即同步
 
 permissions:
   contents: write
@@ -21,13 +23,14 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Fetch TWSE / TPEx OpenData & Update Stock Quotes
+      - name: Fetch Yahoo Finance K-Lines & TWSE Realtime Quotes
         run: |
+          node scripts/sync_real_history.js
           node scripts/sync_stock_data.js
 
-      - name: Commit and Push Updated Data
+      - name: Commit and Push Updated Market Data
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/stock_quotes.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(data): 自動同步最新台股食品類報價與基本面" && git push)
+          git add data/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(market): 自動同步最新 Yahoo 奇摩股市日K線與證交所即時跳動行情" && git push)
